@@ -72,4 +72,693 @@
 
     <!-- Header -->
     <header class="bg-[#161b22] border-b border-[#30363d] sticky top-0 z-40">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-500">
+                    <i class="fa-solid fa-crosshairs text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-extrabold tracking-wider cs-gradient-text">CS ARENA TRACKER</h1>
+                    <p class="text-xs text-slate-400 font-medium tracking-wide flex items-center space-x-2">
+                        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span id="currentSeasonLabel">AKTIV: SESONG 1</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Header Action Buttons -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <button id="revertSeasonBtn" onclick="window.revertToPreviousSeason()" class="hidden px-3 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs sm:text-sm font-semibold rounded-lg border border-red-500/30 transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span class="hidden sm:inline">SLETT SESONG / GÅ TILBAKE</span>
+                </button>
+                <button onclick="window.openNewSeasonModal()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm font-semibold rounded-lg border border-slate-600 transition flex items-center space-x-1.5">
+                    <i class="fa-solid fa-rotate text-amber-400"></i>
+                    <span class="hidden sm:inline">NY SESONG</span>
+                </button>
+                <button onclick="window.openLogModal()" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-bold text-xs sm:text-sm rounded-lg shadow-lg shadow-amber-500/20 transition flex items-center space-x-2">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>REGISTRER HENDELSE</span>
+                </button>
+                <button onclick="window.openSettingsModal()" class="p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-lg border border-slate-700 transition">
+                    <i class="fa-solid fa-gear"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hovedinnhold -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full space-y-8">
+
+        <!-- Navigation Tabs -->
+        <div class="flex border-b border-slate-800 space-x-4">
+            <button id="tabActiveBtn" onclick="window.switchTab('active')" class="pb-3 px-2 font-cs text-lg font-bold border-b-2 border-amber-500 text-amber-500 transition flex items-center space-x-2">
+                <i class="fa-solid fa-trophy"></i>
+                <span>AKTIV SESONG</span>
+            </button>
+            <button id="tabDashboardBtn" onclick="window.switchTab('dashboard')" class="pb-3 px-2 font-cs text-lg font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center space-x-2">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>ALL-TIME DASHBOARD & GRAF</span>
+            </button>
+        </div>
+
+        <!-- SEKSJON 1: AKTIV SESONG VIEW -->
+        <div id="viewActive" class="space-y-8">
+            
+            <!-- Badges Grid -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="cs-card p-4 rounded-xl flex items-center justify-between border-l-4 border-red-500">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">KNIVKONGEN</span>
+                        <h4 id="badgeKnifeKing" class="text-lg font-bold text-slate-100 font-cs mt-0.5">Ingen ennå</h4>
+                        <p id="badgeKnifeKingSub" class="text-xs text-slate-500">Flest kniv-drab</p>
+                    </div>
+                    <div class="p-3 bg-red-500/10 text-red-400 rounded-lg"><i class="fa-solid fa-hand-fist text-xl"></i></div>
+                </div>
+
+                <div class="cs-card p-4 rounded-xl flex items-center justify-between border-l-4 border-cyan-500">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">ZEUS-MESTER</span>
+                        <h4 id="badgeZeusMaster" class="text-lg font-bold text-slate-100 font-cs mt-0.5">Ingen ennå</h4>
+                        <p id="badgeZeusMasterSub" class="text-xs text-slate-500">Flest zeus-drab</p>
+                    </div>
+                    <div class="p-3 bg-cyan-500/10 text-cyan-400 rounded-lg"><i class="fa-solid fa-bolt text-xl"></i></div>
+                </div>
+
+                <div class="cs-card p-4 rounded-xl flex items-center justify-between border-l-4 border-purple-500">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">STRØM-OFFER</span>
+                        <h4 id="badgeUnluckiest" class="text-lg font-bold text-slate-100 font-cs mt-0.5">Ingen ennå</h4>
+                        <p id="badgeUnluckiestSub" class="text-xs text-slate-500">Flest zeus-drap mottatt</p>
+                    </div>
+                    <div class="p-3 bg-purple-500/10 text-purple-400 rounded-lg"><i class="fa-solid fa-skull text-xl"></i></div>
+                </div>
+
+                <div class="cs-card p-4 rounded-xl flex items-center justify-between border-l-4 border-amber-500">
+                    <div>
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">TEAMKILL-KONGE</span>
+                        <h4 id="badgeTKKing" class="text-lg font-bold text-slate-100 font-cs mt-0.5">Ingen ennå</h4>
+                        <p id="badgeTKKingSub" class="text-xs text-slate-500">Flest teamkills begått</p>
+                    </div>
+                    <div class="p-3 bg-amber-500/10 text-amber-400 rounded-lg"><i class="fa-solid fa-user-ninja text-xl"></i></div>
+                </div>
+            </div>
+
+            <!-- Leaderboard Table -->
+            <div class="cs-card rounded-2xl overflow-hidden">
+                <div class="p-5 border-b border-slate-800 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-100 font-cs flex items-center space-x-2">
+                            <span class="text-amber-500">●</span>
+                            <span>AKTIV SESONG TABELL</span>
+                        </h3>
+                        <p class="text-xs text-slate-400 mt-1">Poeng for kniv/zeus-drap mot motstandere, minus for å bli rammet eller teamkill.</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="window.openLogModal()" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30 text-xs font-bold rounded-lg transition">
+                            + NY HENDELSE
+                        </button>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-900/50 text-slate-400 text-xs uppercase font-cs tracking-wider border-b border-slate-800">
+                                <th class="py-3.5 px-4 font-bold">#</th>
+                                <th class="py-3.5 px-4 font-bold">SPILLER</th>
+                                <th class="py-3.5 px-4 font-bold text-center">KNIV (K / D)</th>
+                                <th class="py-3.5 px-4 font-bold text-center">ZEUS (K / D)</th>
+                                <th class="py-3.5 px-4 font-bold text-center">TK</th>
+                                <th class="py-3.5 px-4 font-bold text-center">TOTALT POENG</th>
+                                <th class="py-3.5 px-4 font-bold text-right">JUSTER</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardBody" class="divide-y divide-slate-800/60 text-sm">
+                            <!-- Fylles dynamisk -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Hurtigregistrering Grid -->
+            <div class="space-y-4">
+                <h3 class="text-lg font-bold font-cs text-slate-200">HURTIGREGISTRERING</h3>
+                <div id="playerGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Spillerkort fylles ut dynamisk -->
+                </div>
+            </div>
+
+            <!-- Kamplogg -->
+            <div class="cs-card rounded-xl p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                    <h3 class="text-lg font-bold font-cs text-slate-200 flex items-center space-x-2">
+                        <i class="fa-solid fa-list-ul text-amber-500"></i>
+                        <span>KAMP-LOGG</span>
+                    </h3>
+                    <div class="flex items-center space-x-3">
+                        <button onclick="window.undoLastEvent()" class="px-2.5 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 text-xs font-bold rounded-lg transition flex items-center space-x-1">
+                            <i class="fa-solid fa-rotate-left"></i>
+                            <span>ANGRE SISTE</span>
+                        </button>
+                        <span id="logCount" class="text-xs bg-slate-800 text-slate-400 px-2 py-1 rounded-full font-mono">0 hendelser</span>
+                    </div>
+                </div>
+                <div id="activityFeed" class="space-y-2 max-h-80 overflow-y-auto pr-1">
+                    <!-- Logg-elementer -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SEKSJON 2: DASHBOARD & GRAF VIEW -->
+        <div id="viewDashboard" class="hidden space-y-8">
+            <div class="cs-card p-6 rounded-2xl space-y-6">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="text-2xl font-bold font-cs text-slate-100">POENGUTVIKLING OVER TID</h3>
+                        <p class="text-xs text-slate-400">Viser akkumulert poengsum gjennom alle registrerte hendelser i denne sesongen.</p>
+                    </div>
+                </div>
+                <div class="h-80 w-full relative">
+                    <canvas id="scoreChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[#161b22] border-t border-[#30363d] py-4 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div>CS:GO / CS2 Group Score Tracker • Grrrrt, Krg, L3g, Boney Flamingo, Mkeke</div>
+            <div class="font-mono text-amber-500/80">Nullstilt Hele Appen</div>
+        </div>
+    </footer>
+
+    <!-- MODAL 1: REGISTRER HENDELSE -->
+    <div id="logModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="cs-card w-full max-w-md rounded-2xl p-6 border border-slate-700 relative space-y-5">
+            <button onclick="window.closeLogModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h3 class="text-2xl font-bold font-cs text-amber-500 flex items-center space-x-2">
+                <i class="fa-solid fa-bolt"></i>
+                <span>REGISTRER HENDELSE</span>
+            </h3>
+
+            <form id="eventForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Handlingstype</label>
+                    <select id="actionType" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                        <option value="knifeKill">🗡️ Kniv-drap (+3p killer / -3p offer)</option>
+                        <option value="zeusKill">⚡ Zeus-drap (+2p killer / -2p offer)</option>
+                        <option value="teamkill">⚠️ Teamkill (-2p til morderen)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Utfører (Killer / Morder)</label>
+                    <select id="playerSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                        <!-- Spiller-opsjoner -->
+                    </select>
+                </div>
+
+                <div id="victimContainer">
+                    <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Offer (Mottaker)</label>
+                    <select id="victimSelect" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                        <!-- Offer-opsjoner -->
+                    </select>
+                </div>
+
+                <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold font-cs text-base rounded-lg transition shadow-lg shadow-amber-500/20">
+                    LAGRE HENDELSE
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: INNSTILLINGER -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="cs-card w-full max-w-md rounded-2xl p-6 border border-slate-700 relative space-y-5">
+            <button onclick="window.closeSettingsModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            <h3 class="text-2xl font-bold font-cs text-slate-100 flex items-center space-x-2">
+                <i class="fa-solid fa-gear text-amber-500"></i>
+                <span>POENG-REGLER</span>
+            </h3>
+
+            <div class="space-y-3 text-sm">
+                <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                    <span class="text-slate-300">Kniv Drab (Killer)</span>
+                    <input type="number" id="cfgKnifeKill" class="w-16 bg-slate-800 text-center rounded p-1 border border-slate-700 text-amber-400 font-bold">
+                </div>
+                <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                    <span class="text-slate-300">Kniv Død (Offer)</span>
+                    <input type="number" id="cfgKnifeDeath" class="w-16 bg-slate-800 text-center rounded p-1 border border-slate-700 text-red-400 font-bold">
+                </div>
+                <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                    <span class="text-slate-300">Zeus Drab (Killer)</span>
+                    <input type="number" id="cfgZeusKill" class="w-16 bg-slate-800 text-center rounded p-1 border border-slate-700 text-cyan-400 font-bold">
+                </div>
+                <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                    <span class="text-slate-300">Zeus Død (Offer)</span>
+                    <input type="number" id="cfgZeusDeath" class="w-16 bg-slate-800 text-center rounded p-1 border border-slate-700 text-purple-400 font-bold">
+                </div>
+                <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                    <span class="text-slate-300">Teamkill (Morder)</span>
+                    <input type="number" id="cfgTeamkill" class="w-16 bg-slate-800 text-center rounded p-1 border border-slate-700 text-amber-500 font-bold">
+                </div>
+            </div>
+
+            <button id="saveSettingsBtn" class="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold font-cs rounded-lg border border-slate-600 transition">
+                LAGRE REGLER
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIKK -->
+    <script>
+        const DEFAULT_PLAYERS = ['Grrrrt', 'Krg', 'L3g', 'Boney Flamingo', 'Mkeke'];
+
+        const DEFAULT_SETTINGS = {
+            knifeKill: 3,
+            knifeDeath: -3,
+            zeusKill: 2,
+            zeusDeath: -2,
+            teamkill: -2
+        };
+
+        window.state = {
+            season: 1,
+            players: DEFAULT_PLAYERS.map(name => ({
+                name: name,
+                knifeKills: 0,
+                knifeDeaths: 0,
+                zeusKills: 0,
+                zeusDeaths: 0,
+                teamkills: 0
+            })),
+            history: [],
+            previousSeasons: [],
+            settings: { ...DEFAULT_SETTINGS }
+        };
+
+        let chartInstance = null;
+
+        function init() {
+            loadFromStorage();
+            ensurePlayersExist();
+            renderAll();
+        }
+
+        function ensurePlayersExist() {
+            if (!window.state.players || window.state.players.length === 0) {
+                window.state.players = DEFAULT_PLAYERS.map(name => ({
+                    name: name,
+                    knifeKills: 0,
+                    knifeDeaths: 0,
+                    zeusKills: 0,
+                    zeusDeaths: 0,
+                    teamkills: 0
+                }));
+            }
+        }
+
+        function loadFromStorage() {
+            try {
+                const saved = localStorage.getItem('cs_tracker_state');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    window.state = { ...window.state, ...parsed };
+                }
+            } catch (e) {
+                console.error("Kunne ikke laste fra localStorage", e);
+            }
+        }
+
+        function saveToStorage() {
+            try {
+                localStorage.setItem('cs_tracker_state', JSON.stringify(window.state));
+            } catch (e) {
+                console.error("Kunne ikke lagre til localStorage", e);
+            }
+        }
+
+        function calculatePoints(p) {
+            const s = window.state.settings;
+            return (p.knifeKills * s.knifeKill) +
+                   (p.knifeDeaths * s.knifeDeath) +
+                   (p.zeusKills * s.zeusKill) +
+                   (p.zeusDeaths * s.zeusDeath) +
+                   (p.teamkills * s.teamkill);
+        }
+
+        function renderAll() {
+            document.getElementById('currentSeasonLabel').textContent = `AKTIV: SESONG ${window.state.season}`;
+            
+            const revertBtn = document.getElementById('revertSeasonBtn');
+            if (window.state.season > 1 && window.state.previousSeasons && window.state.previousSeasons.length > 0) {
+                revertBtn.classList.remove('hidden');
+            } else {
+                revertBtn.classList.add('hidden');
+            }
+
+            renderLeaderboard();
+            renderPlayerGrid();
+            renderActivityFeed();
+            updateBadges();
+            populateDropdowns();
+            renderChart();
+        }
+
+        function renderLeaderboard() {
+            const tbody = document.getElementById('leaderboardBody');
+            tbody.innerHTML = '';
+
+            const sorted = [...window.state.players].sort((a, b) => calculatePoints(b) - calculatePoints(a));
+
+            sorted.forEach((p, index) => {
+                const pts = calculatePoints(p);
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-800/40 transition";
+
+                let rankBadge = `<span class="font-bold text-slate-500">${index + 1}</span>`;
+                if (index === 0) rankBadge = `<i class="fa-solid fa-crown text-amber-400 text-base"></i>`;
+                if (index === 1) rankBadge = `<i class="fa-solid fa-medal text-slate-300 text-base"></i>`;
+                if (index === 2) rankBadge = `<i class="fa-solid fa-medal text-amber-600 text-base"></i>`;
+
+                tr.innerHTML = `
+                    <td class="py-4 px-4 font-mono">${rankBadge}</td>
+                    <td class="py-4 px-4 font-bold text-slate-100 font-cs text-base">${p.name}</td>
+                    <td class="py-4 px-4 text-center">
+                        <span class="text-red-400 font-bold">${p.knifeKills}</span> / <span class="text-slate-500">${p.knifeDeaths}</span>
+                    </td>
+                    <td class="py-4 px-4 text-center">
+                        <span class="text-cyan-400 font-bold">${p.zeusKills}</span> / <span class="text-slate-500">${p.zeusDeaths}</span>
+                    </td>
+                    <td class="py-4 px-4 text-center font-bold text-purple-400">${p.teamkills}</td>
+                    <td class="py-4 px-4 text-center font-bold text-lg ${pts >= 0 ? 'text-amber-400' : 'text-red-500'} font-mono">
+                        ${pts > 0 ? '+' + pts : pts}
+                    </td>
+                    <td class="py-4 px-4 text-right space-x-1">
+                        <button onclick="window.quickAdd('${p.name}', 'knife')" class="px-2 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs rounded border border-red-500/30">+Kniv</button>
+                        <button onclick="window.quickAdd('${p.name}', 'zeus')" class="px-2 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs rounded border border-cyan-500/30">+Zeus</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderPlayerGrid() {
+            const grid = document.getElementById('playerGrid');
+            grid.innerHTML = '';
+
+            window.state.players.forEach(p => {
+                const card = document.createElement('div');
+                card.className = "cs-card p-4 rounded-xl space-y-3";
+
+                card.innerHTML = `
+                    <div class="flex justify-between items-center border-b border-slate-800 pb-2">
+                        <h4 class="font-cs text-lg font-bold text-slate-100">${p.name}</h4>
+                        <span class="font-mono text-xs font-bold px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/30">
+                            ${calculatePoints(p)} p
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <button onclick="window.quickAdd('${p.name}', 'knife')" class="p-2 bg-slate-900 hover:bg-red-950/40 border border-slate-700 hover:border-red-500/50 rounded flex items-center justify-between text-slate-300">
+                            <span>🗡️ Kniv-drap</span>
+                            <span class="font-bold text-red-400">${p.knifeKills}</span>
+                        </button>
+                        <button onclick="window.quickAdd('${p.name}', 'zeus')" class="p-2 bg-slate-900 hover:bg-cyan-950/40 border border-slate-700 hover:border-cyan-500/50 rounded flex items-center justify-between text-slate-300">
+                            <span>⚡ Zeus-drap</span>
+                            <span class="font-bold text-cyan-400">${p.zeusKills}</span>
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function updateBadges() {
+            const players = window.state.players;
+
+            const knifeKing = [...players].sort((a,b) => b.knifeKills - a.knifeKills)[0];
+            document.getElementById('badgeKnifeKing').textContent = knifeKing && knifeKing.knifeKills > 0 ? knifeKing.name : 'Ingen ennå';
+            document.getElementById('badgeKnifeKingSub').textContent = knifeKing && knifeKing.knifeKills > 0 ? `${knifeKing.knifeKills} kniv-drap` : 'Flest kniv-drab';
+
+            const zeusMaster = [...players].sort((a,b) => b.zeusKills - a.zeusKills)[0];
+            document.getElementById('badgeZeusMaster').textContent = zeusMaster && zeusMaster.zeusKills > 0 ? zeusMaster.name : 'Ingen ennå';
+            document.getElementById('badgeZeusMasterSub').textContent = zeusMaster && zeusMaster.zeusKills > 0 ? `${zeusMaster.zeusKills} zeus-drap` : 'Flest zeus-drab';
+
+            const unluckiest = [...players].sort((a,b) => (b.knifeDeaths + b.zeusDeaths) - (a.knifeDeaths + a.zeusDeaths))[0];
+            const totalDeaths = unluckiest ? (unluckiest.knifeDeaths + unluckiest.zeusDeaths) : 0;
+            document.getElementById('badgeUnluckiest').textContent = totalDeaths > 0 ? unluckiest.name : 'Ingen ennå';
+            document.getElementById('badgeUnluckiestSub').textContent = totalDeaths > 0 ? `${totalDeaths} dratt av sinne/zeus` : 'Flest zeus-drap mottatt';
+
+            const tkKing = [...players].sort((a,b) => b.teamkills - a.teamkills)[0];
+            document.getElementById('badgeTKKing').textContent = tkKing && tkKing.teamkills > 0 ? tkKing.name : 'Ingen ennå';
+            document.getElementById('badgeTKKingSub').textContent = tkKing && tkKing.teamkills > 0 ? `${tkKing.teamkills} teamkills` : 'Flest teamkills begått';
+        }
+
+        function renderActivityFeed() {
+            const feed = document.getElementById('activityFeed');
+            feed.innerHTML = '';
+            document.getElementById('logCount').textContent = `${window.state.history.length} hendelser`;
+
+            if (window.state.history.length === 0) {
+                feed.innerHTML = `<div class="text-xs text-slate-500 italic py-2">Ingen hendelser i denne sesongen ennå.</div>`;
+                return;
+            }
+
+            [...window.state.history].reverse().forEach((item) => {
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-2 rounded bg-slate-900/60 border border-slate-800 text-xs";
+
+                let actionText = "";
+                if (item.actionType === 'knifeKill') actionText = `<span class="text-red-400 font-bold">${item.player}</span> knivet motstander <span class="text-slate-400">(${item.victim || 'Ukjent'})</span>`;
+                if (item.actionType === 'zeusKill') actionText = `<span class="text-cyan-400 font-bold">${item.player}</span> stakk <span class="text-slate-400">${item.victim || 'Ukjent'}</span> med Zeus!`;
+                if (item.actionType === 'teamkill') actionText = `<span class="text-purple-400 font-bold">${item.player}</span> begikk teamkill på <span class="text-slate-400">${item.victim || 'lagkamerat'}</span>`;
+
+                div.innerHTML = `<div>${actionText}</div><div class="text-slate-500 font-mono text-[10px]">${item.timestamp || ''}</div>`;
+                feed.appendChild(div);
+            });
+        }
+
+        function populateDropdowns() {
+            const pSelect = document.getElementById('playerSelect');
+            const vSelect = document.getElementById('victimSelect');
+            pSelect.innerHTML = '';
+            vSelect.innerHTML = '';
+
+            window.state.players.forEach(p => {
+                pSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+                vSelect.innerHTML += `<option value="${p.name}">${p.name}</option>`;
+            });
+        }
+
+        window.quickAdd = function(playerName, type) {
+            const player = window.state.players.find(p => p.name === playerName);
+            if (!player) return;
+
+            if (type === 'knife') player.knifeKills++;
+            if (type === 'zeus') player.zeusKills++;
+
+            window.state.history.push({
+                player: playerName,
+                victim: 'Motstander',
+                actionType: type === 'knife' ? 'knifeKill' : 'zeusKill',
+                timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            });
+
+            saveToStorage();
+            renderAll();
+        };
+
+        window.undoLastEvent = function() {
+            if (window.state.history.length === 0) {
+                alert("Ingen hendelser å angre!");
+                return;
+            }
+
+            const lastEvent = window.state.history.pop();
+            const p = window.state.players.find(x => x.name === lastEvent.player);
+            const v = window.state.players.find(x => x.name === lastEvent.victim);
+
+            if (lastEvent.actionType === 'knifeKill') {
+                if (p && p.knifeKills > 0) p.knifeKills--;
+                if (v && lastEvent.player !== lastEvent.victim && v.knifeDeaths > 0) v.knifeDeaths--;
+            } else if (lastEvent.actionType === 'zeusKill') {
+                if (p && p.zeusKills > 0) p.zeusKills--;
+                if (v && lastEvent.player !== lastEvent.victim && v.zeusDeaths > 0) v.zeusDeaths--;
+            } else if (lastEvent.actionType === 'teamkill') {
+                if (p && p.teamkills > 0) p.teamkills--;
+            }
+
+            saveToStorage();
+            renderAll();
+        };
+
+        window.openNewSeasonModal = () => {
+            if (confirm("Ønsker du å starte en ny sesong? Dette vil ta vare på forrige sesong og starte en ny, tom sesong.")) {
+                if (!window.state.previousSeasons) window.state.previousSeasons = [];
+
+                // Ta vare på tilstanden til forrige sesong
+                window.state.previousSeasons.push({
+                    season: window.state.season,
+                    players: JSON.parse(JSON.stringify(window.state.players)),
+                    history: JSON.parse(JSON.stringify(window.state.history))
+                });
+
+                window.state.season++;
+                window.state.players.forEach(p => {
+                    p.knifeKills = 0; p.knifeDeaths = 0;
+                    p.zeusKills = 0; p.zeusDeaths = 0;
+                    p.teamkills = 0;
+                });
+                window.state.history = [];
+
+                saveToStorage();
+                renderAll();
+            }
+        };
+
+        window.revertToPreviousSeason = () => {
+            if (!window.state.previousSeasons || window.state.previousSeasons.length === 0) {
+                alert("Ingen tidligere sesong å gå tilbake til.");
+                return;
+            }
+
+            if (confirm(`Er du sikker på at du vil slette Sesong ${window.state.season} og gå tilbake til Sesong ${window.state.season - 1}?`)) {
+                const prev = window.state.previousSeasons.pop();
+                window.state.season = prev.season;
+                window.state.players = prev.players;
+                window.state.history = prev.history;
+
+                saveToStorage();
+                renderAll();
+            }
+        };
+
+        window.switchTab = function(tab) {
+            const viewActive = document.getElementById('viewActive');
+            const viewDashboard = document.getElementById('viewDashboard');
+            const tabActiveBtn = document.getElementById('tabActiveBtn');
+            const tabDashboardBtn = document.getElementById('tabDashboardBtn');
+
+            if (tab === 'active') {
+                viewActive.classList.remove('hidden');
+                viewDashboard.classList.add('hidden');
+                tabActiveBtn.className = "pb-3 px-2 font-cs text-lg font-bold border-b-2 border-amber-500 text-amber-500 transition flex items-center space-x-2";
+                tabDashboardBtn.className = "pb-3 px-2 font-cs text-lg font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center space-x-2";
+            } else {
+                viewActive.classList.add('hidden');
+                viewDashboard.classList.remove('hidden');
+                tabDashboardBtn.className = "pb-3 px-2 font-cs text-lg font-bold border-b-2 border-amber-500 text-amber-500 transition flex items-center space-x-2";
+                tabActiveBtn.className = "pb-3 px-2 font-cs text-lg font-bold border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition flex items-center space-x-2";
+                renderChart();
+            }
+        };
+
+        function renderChart() {
+            const ctx = document.getElementById('scoreChart');
+            if (!ctx) return;
+
+            if (chartInstance) chartInstance.destroy();
+
+            const labels = window.state.history.map((_, i) => `#${i+1}`);
+            const datasets = window.state.players.map((p, idx) => {
+                const colors = ['#f59e0b', '#06b6d4', '#ef4444', '#a855f7', '#10b981'];
+                let cumulative = 0;
+                const data = window.state.history.map(h => {
+                    if (h.player === p.name) {
+                        if (h.actionType === 'knifeKill') cumulative += window.state.settings.knifeKill;
+                        if (h.actionType === 'zeusKill') cumulative += window.state.settings.zeusKill;
+                        if (h.actionType === 'teamkill') cumulative += window.state.settings.teamkill;
+                    }
+                    if (h.victim === p.name) {
+                        if (h.actionType === 'knifeKill') cumulative += window.state.settings.knifeDeath;
+                        if (h.actionType === 'zeusKill') cumulative += window.state.settings.zeusDeath;
+                    }
+                    return cumulative;
+                });
+
+                return {
+                    label: p.name,
+                    data: data.length ? data : [0],
+                    borderColor: colors[idx % colors.length],
+                    backgroundColor: colors[idx % colors.length],
+                    tension: 0.3
+                };
+            });
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels: labels.length ? labels : ['Start'], datasets: datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#94a3b8' } } },
+                    scales: {
+                        x: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } },
+                        y: { ticks: { color: '#64748b' }, grid: { color: '#1e293b' } }
+                    }
+                }
+            });
+        }
+
+        window.openLogModal = () => document.getElementById('logModal').classList.remove('hidden');
+        window.closeLogModal = () => document.getElementById('logModal').classList.add('hidden');
+        window.openSettingsModal = () => {
+            document.getElementById('cfgKnifeKill').value = window.state.settings.knifeKill;
+            document.getElementById('cfgKnifeDeath').value = window.state.settings.knifeDeath;
+            document.getElementById('cfgZeusKill').value = window.state.settings.zeusKill;
+            document.getElementById('cfgZeusDeath').value = window.state.settings.zeusDeath;
+            document.getElementById('cfgTeamkill').value = window.state.settings.teamkill;
+            document.getElementById('settingsModal').classList.remove('hidden');
+        };
+        window.closeSettingsModal = () => document.getElementById('settingsModal').classList.add('hidden');
+
+        document.getElementById('eventForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const actionType = document.getElementById('actionType').value;
+            const player = document.getElementById('playerSelect').value;
+            const victim = document.getElementById('victimSelect').value;
+
+            const p = window.state.players.find(x => x.name === player);
+            const v = window.state.players.find(x => x.name === victim);
+
+            if (actionType === 'knifeKill') {
+                if (p) p.knifeKills++;
+                if (v && player !== victim) v.knifeDeaths++;
+            } else if (actionType === 'zeusKill') {
+                if (p) p.zeusKills++;
+                if (v && player !== victim) v.zeusDeaths++;
+            } else if (actionType === 'teamkill') {
+                if (p) p.teamkills++;
+            }
+
+            window.state.history.push({
+                player,
+                victim,
+                actionType,
+                timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            });
+
+            saveToStorage();
+            renderAll();
+            window.closeLogModal();
+        });
+
+        document.getElementById('saveSettingsBtn').addEventListener('click', () => {
+            window.state.settings.knifeKill = parseInt(document.getElementById('cfgKnifeKill').value) || 3;
+            window.state.settings.knifeDeath = parseInt(document.getElementById('cfgKnifeDeath').value) || -3;
+            window.state.settings.zeusKill = parseInt(document.getElementById('cfgZeusKill').value) || 2;
+            window.state.settings.zeusDeath = parseInt(document.getElementById('cfgZeusDeath').value) || -2;
+            window.state.settings.teamkill = parseInt(document.getElementById('cfgTeamkill').value) || -2;
+
+            saveToStorage();
+            renderAll();
+            window.closeSettingsModal();
+        });
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
