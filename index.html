@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="no" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CS:GO / CS2 Knife & Zeus Tracker</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Google Font: Rajdhani & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Rajdhani:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cs: {
+                            orange: '#f59e0b',
+                            yellow: '#eab308',
+                            gold: '#fbbf24',
+                            dark: '#0e1117',
+                            card: '#161b22',
+                            panel: '#1f293d',
+                            border: '#2d3748',
+                            zeus: '#06b6d4',
+                            knife: '#ef4444'
+                        }
+                    },
+                    fontFamily: {
+                        cs: ['Rajdhani', 'sans-serif'],
+                        body: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0b0e14;
+            color: #e2e8f0;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.05) 0%, transparent 40%);
+            background-attachment: fixed;
+        }
+        .cs-font {
+            font-family: 'Rajdhani', sans-serif;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #f59e0b;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between pb-12">
+
+    <!-- Header / Navbar -->
+    <header class="bg-slate-900/90 border-b border-amber-500/30 sticky top-0 z-40 backdrop-blur-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-12 h-12 bg-amber-500/10 border border-amber-500/50 rounded-lg flex items-center justify-center text-amber-500 shadow-lg shadow-amber-500/10">
+                    <i class="fa-solid fa-crosshairs text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="cs-font text-2xl sm:text-3xl font-extrabold tracking-wider text-white uppercase flex items-center gap-2">
+                        CS Arena <span class="text-amber-500">Tracker</span>
+                    </h1>
+                    <p class="text-xs text-amber-500/80 font-bold tracking-widest uppercase flex items-center gap-1.5" id="activeSeasonLabel">
+                        <i class="fa-solid fa-flag-checkered text-amber-400"></i> Aktiv: Sesong 1
+                    </p>
+                </div>
+            </div>
+
+            <!-- Header buttons -->
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <button type="button" id="btnOpenNewSeason" class="bg-slate-800 hover:bg-slate-700 border border-amber-500/30 text-amber-400 font-bold px-3 py-2 rounded-md uppercase tracking-wider text-xs sm:text-sm flex items-center gap-1.5 transition-all cursor-pointer">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span class="hidden sm:inline">Ny Sesong</span>
+                </button>
+
+                <button type="button" id="btnOpenLog" class="cs-font bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-bold px-4 py-2.5 rounded-md uppercase tracking-wider text-sm sm:text-base flex items-center gap-2 transition-all shadow-md hover:shadow-amber-500/20 active:scale-95 cursor-pointer">
+                    <i class="fa-solid fa-plus text-lg"></i>
+                    <span class="hidden sm:inline">Registrer Hendelse</span>
+                    <span class="sm:hidden">Logg</span>
+                </button>
+
+                <button type="button" id="btnOpenSettings" class="p-2.5 text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700/60 rounded-md transition-all cursor-pointer" title="Innstillinger">
+                    <i class="fa-solid fa-gear text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full space-y-8">
+
+        <!-- Navigation Tabs: Aktiv Sesong vs All-Time Dashbord -->
+        <div class="flex border-b border-slate-800 space-x-2">
+            <button type="button" id="tabActiveSeason" onclick="window.switchTab('active')" class="py-3 px-5 cs-font font-bold uppercase text-base border-b-2 border-amber-500 text-amber-400 flex items-center gap-2 transition-all cursor-pointer">
+                <i class="fa-solid fa-gamepad"></i> Aktiv Sesong
+            </button>
+            <button type="button" id="tabAllTime" onclick="window.switchTab('alltime')" class="py-3 px-5 cs-font font-bold uppercase text-base border-b-2 border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all cursor-pointer">
+                <i class="fa-solid fa-chart-line"></i> All-Time Dashbord & Graf
+            </button>
+        </div>
+
+        <!-- ================= ACTIVE SEASON VIEW ================= -->
+        <div id="viewActiveSeason" class="space-y-8">
+            <!-- Hall of Fame Badges -->
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Knife King -->
+                <div class="bg-gradient-to-br from-slate-900 to-slate-900/90 border border-red-500/30 rounded-xl p-4 flex items-center space-x-4 relative overflow-hidden shadow-lg">
+                    <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/40 flex items-center justify-center text-red-500 shrink-0 text-xl shadow-inner">
+                        <i class="fa-solid fa-hand-back-fist"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-red-400 flex items-center gap-1">
+                            <i class="fa-solid fa-crown text-amber-400"></i> Knivkongen
+                        </span>
+                        <h3 id="badgeKnifeKing" class="cs-font text-xl font-bold text-white tracking-wide mt-0.5">-</h3>
+                        <p id="badgeKnifeKingStats" class="text-xs text-slate-400">0 knivdrap</p>
+                    </div>
+                </div>
+
+                <!-- Zeus Master -->
+                <div class="bg-gradient-to-br from-slate-900 to-slate-900/90 border border-cyan-500/30 rounded-xl p-4 flex items-center space-x-4 relative overflow-hidden shadow-lg">
+                    <div class="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/40 flex items-center justify-center text-cyan-400 shrink-0 text-xl shadow-inner">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-cyan-400 flex items-center gap-1">
+                            <i class="fa-solid fa-bolt text-cyan-400"></i> Zeus-Mester
+                        </span>
+                        <h3 id="badgeZeusMaster" class="cs-font text-xl font-bold text-white tracking-wide mt-0.5">-</h3>
+                        <p id="badgeZeusMasterStats" class="text-xs text-slate-400">0 taser-drap</p>
+                    </div>
+                </div>
+
+                <!-- Most Unlucky Target -->
+                <div class="bg-gradient-to-br from-slate-900 to-slate-900/90 border border-purple-500/30 rounded-xl p-4 flex items-center space-x-4 relative overflow-hidden shadow-lg">
+                    <div class="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/40 flex items-center justify-center text-purple-400 shrink-0 text-xl shadow-inner">
+                        <i class="fa-solid fa-skull-crossbones"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-purple-400 flex items-center gap-1">
+                            <i class="fa-solid fa-face-frown"></i> Største Offer
+                        </span>
+                        <h3 id="badgeUnluckiest" class="cs-font text-xl font-bold text-white tracking-wide mt-0.5">-</h3>
+                        <p id="badgeUnluckiestStats" class="text-xs text-slate-400">0x drept av fienden</p>
+                    </div>
+                </div>
+
+                <!-- Teamkill King -->
+                <div class="bg-gradient-to-br from-slate-900 to-slate-900/90 border border-orange-500/30 rounded-xl p-4 flex items-center space-x-4 relative overflow-hidden shadow-lg">
+                    <div class="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/40 flex items-center justify-center text-orange-400 shrink-0 text-xl shadow-inner">
+                        <i class="fa-solid fa-person-burst"></i>
+                    </div>
+                    <div>
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-orange-400 flex items-center gap-1">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Teamkill-Konge
+                        </span>
+                        <h3 id="badgeTKKing" class="cs-font text-xl font-bold text-white tracking-wide mt-0.5">-</h3>
+                        <p id="badgeTKKingStats" class="text-xs text-slate-400">0 medspillere drept</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Leaderboard Section -->
+            <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-2xl relative">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
+                    <div>
+                        <h2 class="cs-font text-2xl sm:text-3xl font-extrabold uppercase tracking-wide text-white flex items-center gap-3">
+                            <span class="w-3 h-3 rounded-full bg-amber-500 inline-block animate-pulse"></span>
+                            Aktiv Sesong Tabell
+                        </h2>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">Poeng for kniv/zeus-drap mot motstandere, minus for å bli rammet eller teamkille.</p>
+                    </div>
+
+                    <button type="button" onclick="window.openLogModal()" class="cs-font bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/40 px-4 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-bullseye text-amber-500"></i>
+                        Ny Hendelse
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800/80">
+                                <th class="pb-3 px-3 w-12 text-center">#</th>
+                                <th class="pb-3 px-3">Spiller</th>
+                                <th class="pb-3 px-3 text-center text-red-400">Kniv (K / D)</th>
+                                <th class="pb-3 px-3 text-center text-cyan-400">Zeus (K / D)</th>
+                                <th class="pb-3 px-3 text-center text-orange-400">TK</th>
+                                <th class="pb-3 px-3 text-center text-amber-400 font-bold">Totalt Poeng</th>
+                                <th class="pb-3 px-3 text-right">Juster</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboardBody" class="divide-y divide-slate-800/50">
+                            <!-- Dynamic Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Player Cards Grid (Quick Actions) -->
+            <section>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="cs-font text-xl sm:text-2xl font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-users text-amber-500 text-lg"></i> Hurtigregistrering
+                    </h2>
+                    <span class="text-xs text-slate-400">Enkelttrykk for umiddelbar oppdatering</span>
+                </div>
+                <div id="playerGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                    <!-- Dynamic Cards -->
+                </div>
+            </section>
+
+            <!-- Activity Log -->
+            <section class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-6">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                    <h2 class="cs-font text-xl font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-amber-500"></i> Kamp-logg
+                    </h2>
+                    <span id="activityCount" class="text-xs bg-slate-800 text-slate-400 px-2.5 py-1 rounded-full font-mono">0 hendelser</span>
+                </div>
+                <div id="activityFeed" class="space-y-2.5 max-h-80 overflow-y-auto pr-1">
+                    <!-- History Feed -->
+                </div>
+            </section>
+        </div>
+
+        <!-- ================= ALL-TIME DASHBOARD VIEW ================= -->
+        <div id="viewAllTime" class="space-y-8 hidden">
+            <!-- Chart Section -->
+            <section class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-2xl">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-slate-800">
+                    <div>
+                        <h2 class="cs-font text-2xl sm:text-3xl font-extrabold uppercase tracking-wide text-white flex items-center gap-3">
+                            <i class="fa-solid fa-chart-line text-amber-500"></i> Poengutvikling & Prognose
+                        </h2>
+                        <p class="text-xs sm:text-sm text-slate-400 mt-1">Viser historisk poengsum per gjennomført sesong pluss stiplet forventet resultat for neste sesong.</p>
+                    </div>
+                </div>
+
+                <div class="w-full h-80 relative">
+                    <canvas id="seasonChart"></canvas>
+                </div>
+            </section>
+
+            <!-- All-Time Leaderboard Section -->
+            <section class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-6 shadow-2xl">
+                <div class="mb-6 pb-4 border-b border-slate-800">
+                    <h2 class="cs-font text-2xl sm:text-3xl font-extrabold uppercase tracking-wide text-amber-400 flex items-center gap-3">
+                        <i class="fa-solid fa-trophy text-amber-500"></i> All-Time Totaltabell
+                    </h2>
+                    <p class="text-xs sm:text-sm text-slate-400 mt-1">Samlet oppsummering på tvers av alle nåværende og arkiverte sesonger.</p>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-xs uppercase tracking-wider text-slate-400 border-b border-slate-800/80">
+                                <th class="pb-3 px-3 w-12 text-center">#</th>
+                                <th class="pb-3 px-3">Spiller</th>
+                                <th class="pb-3 px-3 text-center text-emerald-400">Knivdrap</th>
+                                <th class="pb-3 px-3 text-center text-cyan-400">Zeus-drap</th>
+                                <th class="pb-3 px-3 text-center text-orange-400">TK Totalt</th>
+                                <th class="pb-3 px-3 text-center text-purple-400">Ble Knivet/Zeuset</th>
+                                <th class="pb-3 px-3 text-center text-amber-400 font-bold">Totalt Poeng</th>
+                            </tr>
+                        </thead>
+                        <tbody id="allTimeLeaderboardBody" class="divide-y divide-slate-800/50">
+                            <!-- Dynamic All-Time Rows -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- Past Seasons Archive List -->
+            <section class="bg-slate-900/60 border border-slate-800 rounded-2xl p-4 sm:p-6">
+                <h3 class="cs-font text-xl font-bold uppercase tracking-wider text-slate-200 mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-box-archive text-amber-500"></i> Arkiverte Sesonger
+                </h3>
+                <div id="pastSeasonsList" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Dynamic Past Seasons -->
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-12 border-t border-slate-800/80 py-6 bg-slate-950/60">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p>CS:GO / CS2 Group Score Tracker &bull; Grrrrt, Krg, L3g, Boney Flamingo, Mkeke</p>
+            <div class="flex items-center space-x-4">
+                <button type="button" id="btnResetData" class="text-red-400 hover:text-red-300 hover:underline cursor-pointer">Nullstill Hele Appen</button>
+            </div>
+        </div>
+    </footer>
+
+    <!-- NEW SEASON MODAL -->
+    <div id="newSeasonModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button type="button" id="btnCloseNewSeason" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl p-1 cursor-pointer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="cs-font text-2xl font-bold uppercase tracking-wider text-amber-400 mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-rotate-right"></i> Start Ny Sesong
+            </h3>
+            <p class="text-xs text-slate-400 mb-5">Nåværende sesong blir arkivert i All-Time historikken, og aktiv sesong nullstilles.</p>
+
+            <form id="newSeasonForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs uppercase font-bold text-slate-300 mb-1">Sesongnavn / Beskrivelse</label>
+                    <input type="text" id="inputSeasonTitle" required placeholder="f.eks. Sesong 2 - Vår 2026" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500">
+                </div>
+
+                <div class="pt-3">
+                    <button type="submit" class="w-full cs-font bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-extrabold py-3.5 px-4 rounded-xl uppercase tracking-wider text-base shadow-lg transition-all active:scale-[0.98] cursor-pointer">
+                        Arkiver & Start Ny Sesong
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- LOG KILL EVENT MODAL -->
+    <div id="logModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-amber-500/40 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button type="button" id="btnCloseLog" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl p-1 cursor-pointer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="cs-font text-2xl font-bold uppercase tracking-wider text-amber-400 mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-crosshairs"></i> Registrer Hendelse
+            </h3>
+            <p class="text-xs text-slate-400 mb-5">Velg spiller og hendelse som skjedde i kampen.</p>
+
+            <form id="logForm" class="space-y-4">
+                <div>
+                    <label class="block text-xs uppercase font-bold text-slate-300 mb-2">Spiller</label>
+                    <select id="selectPlayer" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-amber-500 font-medium">
+                        <!-- Dynamic Options -->
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs uppercase font-bold text-slate-300 mb-2">Hendelse</label>
+                    <div class="space-y-2">
+                        <label class="cursor-pointer block">
+                            <input type="radio" name="actionType" value="knifeKill" checked class="peer sr-only">
+                            <div class="p-2.5 border border-slate-700 bg-slate-800/50 peer-checked:border-emerald-500 peer-checked:bg-emerald-500/10 peer-checked:text-emerald-400 rounded-xl flex items-center justify-between text-slate-300 text-xs font-bold uppercase transition-all">
+                                <span><i class="fa-solid fa-hand-back-fist mr-2 text-emerald-400"></i>Knivet motstander</span>
+                                <span class="font-mono text-emerald-400" id="badgePtsKnifeKill">+3 pt</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer block">
+                            <input type="radio" name="actionType" value="zeusKill" class="peer sr-only">
+                            <div class="p-2.5 border border-slate-700 bg-slate-800/50 peer-checked:border-cyan-400 peer-checked:bg-cyan-500/10 peer-checked:text-cyan-400 rounded-xl flex items-center justify-between text-slate-300 text-xs font-bold uppercase transition-all">
+                                <span><i class="fa-solid fa-bolt mr-2 text-cyan-400"></i>Zeuset motstander</span>
+                                <span class="font-mono text-cyan-400" id="badgePtsZeusKill">+2 pt</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer block">
+                            <input type="radio" name="actionType" value="knifeDeath" class="peer sr-only">
+                            <div class="p-2.5 border border-slate-700 bg-slate-800/50 peer-checked:border-red-500 peer-checked:bg-red-500/10 peer-checked:text-red-400 rounded-xl flex items-center justify-between text-slate-300 text-xs font-bold uppercase transition-all">
+                                <span><i class="fa-solid fa-skull mr-2 text-red-400"></i>Ble knivet av motstander</span>
+                                <span class="font-mono text-red-400" id="badgePtsKnifeDeath">-3 pt</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer block">
+                            <input type="radio" name="actionType" value="zeusDeath" class="peer sr-only">
+                            <div class="p-2.5 border border-slate-700 bg-slate-800/50 peer-checked:border-purple-400 peer-checked:bg-purple-500/10 peer-checked:text-purple-400 rounded-xl flex items-center justify-between text-slate-300 text-xs font-bold uppercase transition-all">
+                                <span><i class="fa-solid fa-bolt-lightning mr-2 text-purple-400"></i>Ble zeuset av motstander</span>
+                                <span class="font-mono text-purple-400" id="badgePtsZeusDeath">-2 pt</span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer block">
+                            <input type="radio" name="actionType" value="teamkill" class="peer sr-only">
+                            <div class="p-2.5 border border-slate-700 bg-slate-800/50 peer-checked:border-orange-500 peer-checked:bg-orange-500/10 peer-checked:text-orange-400 rounded-xl flex items-center justify-between text-slate-300 text-xs font-bold uppercase transition-all">
+                                <span><i class="fa-solid fa-person-burst mr-2 text-orange-400"></i>Teamkill (Drepte medspiller)</span>
+                                <span class="font-mono text-orange-400" id="badgePtsTK">-2 pt</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div id="tkVictimWrapper" class="hidden">
+                    <label class="block text-xs uppercase font-bold text-orange-400 mb-2">Hvilken lagkamerat ble drept? (Valgfritt)</label>
+                    <select id="selectTKVictim" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-amber-500 font-medium text-sm">
+                        <!-- Dynamic Options -->
+                    </select>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full cs-font bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-extrabold py-3.5 px-4 rounded-xl uppercase tracking-wider text-base shadow-lg transition-all active:scale-[0.98] cursor-pointer">
+                        Lagre Hendelse
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SETTINGS MODAL -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
+            <button type="button" id="btnCloseSettings" class="absolute top-4 right-4 text-slate-400 hover:text-white text-xl p-1 cursor-pointer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+
+            <h3 class="cs-font text-2xl font-bold uppercase tracking-wider text-white mb-1 flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-amber-500"></i> Poenginnstillinger
+            </h3>
+            <p class="text-xs text-slate-400 mb-6">Tilpass poengverdier for hendelser i kampen.</p>
+
+            <form id="settingsForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Kniv Motstander (+)</label>
+                        <input type="number" id="cfgKnifeKill" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white font-mono" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Ble Knivet (-)</label>
+                        <input type="number" id="cfgKnifeDeath" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white font-mono" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Zeus Motstander (+)</label>
+                        <input type="number" id="cfgZeusKill" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white font-mono" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Ble Zeuset (-)</label>
+                        <input type="number" id="cfgZeusDeath" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white font-mono" required>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-bold text-slate-300 uppercase mb-1">Teamkill (-)</label>
+                        <input type="number" id="cfgTeamkill" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-2.5 text-white font-mono" required>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex items-center justify-end space-x-3">
+                    <button type="button" id="btnCancelSettings" class="px-4 py-2 text-sm text-slate-400 hover:text-white cursor-pointer">Avbryt</button>
+                    <button type="submit" class="cs-font bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-5 py-2 rounded-lg uppercase tracking-wider text-sm cursor-pointer">
+                        Lagre
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- RESET CONFIRMATION MODAL -->
+    <div id="resetModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-slate-900 border border-red-500/50 rounded-2xl max-w-sm w-full p-6 text-center">
+            <div class="w-12 h-12 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center mx-auto mb-4 text-2xl">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <h3 class="cs-font text-xl font-bold uppercase text-white mb-2">Nullstill Alt?</h3>
+            <p class="text-xs text-slate-400 mb-6">Dette vil slette ALLE sesonger og all historikk permanent.</p>
+            <div class="flex justify-center space-x-3">
+                <button type="button" id="btnCancelReset" class="px-4 py-2 text-xs uppercase font-bold text-slate-400 hover:text-white bg-slate-800 rounded-lg cursor-pointer">Avbryt</button>
+                <button type="button" id="btnConfirmReset" class="px-4 py-2 text-xs uppercase font-bold text-white bg-red-600 hover:bg-red-700 rounded-lg shadow-lg cursor-pointer">Nullstill Alt</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script>
+        const DEFAULT_PLAYERS = ['Grrrrt', 'Krg', 'L3g', 'Boney Flamingo', 'Mkeke'];
+        const PLAYER_COLORS = {
+            'Grrrrt': '#f59e0b',
+            'Krg': '#06b6d4',
+            'L3g': '#10b981',
+            'Boney Flamingo': '#ec4899',
+            'Mkeke': '#8b5cf6'
+        };
+        const DEFAULT_SETTINGS = {
+            knifeKill: 3,
+            knifeDeath: -3,
+            zeusKill: 2,
+            zeusDeath: -2,
+            teamkill: -2
+        };
+
+        window.state = {
+            currentSeasonName: "Sesong 1",
+            players: {},
+            history: [],
+            pastSeasons: [],
+            settings: { ...DEFAULT_SETTINGS }
+        };
+
+        let myChartInstance = null;
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function loadFromStorage() {
+            try {
+                const savedState = localStorage.getItem('cs_arena_tracker_v5');
+                if (savedState) {
+                    const parsed = JSON.parse(savedState);
+                    if (parsed && typeof parsed === 'object') {
+                        window.state = parsed;
+                    }
+                }
+            } catch (e) {
+                console.error("Feil ved lasting:", e);
+            }
+
+            if (!window.state.settings) window.state.settings = { ...DEFAULT_SETTINGS };
+            if (!window.state.pastSeasons) window.state.pastSeasons = [];
+            if (!window.state.currentSeasonName) window.state.currentSeasonName = "Sesong 1";
+            if (!window.state.history) window.state.history = [];
+            if (!window.state.players || Object.keys(window.state.players).length === 0) {
+                window.state.players = {};
+                DEFAULT_PLAYERS.forEach(function(name) {
+                    window.state.players[name] = {
+                        name: name,
+                        knifeKills: 0,
+                        knifeDeaths: 0,
+                        zeusKills: 0,
+                        zeusDeaths: 0,
+                        teamkills: 0,
+                        manualAdj: 0
+                    };
+                });
+            } else {
+                DEFAULT_PLAYERS.forEach(function(name) {
+                    if (!window.state.players[name]) {
+                        window.state.players[name] = {
+                            name: name,
+                            knifeKills: 0,
+                            knifeDeaths: 0,
+                            zeusKills: 0,
+                            zeusDeaths: 0,
+                            teamkills: 0,
+                            manualAdj: 0
+                        };
+                    }
+                });
+            }
+            saveToStorage();
+        }
+
+        function setupInitialState() {
+            window.state.currentSeasonName = "Sesong 1";
+            window.state.players = {};
+            DEFAULT_PLAYERS.forEach(function(name) {
+                window.state.players[name] = {
+                    name: name,
+                    knifeKills: 0,
+                    knifeDeaths: 0,
+                    zeusKills: 0,
+                    zeusDeaths: 0,
+                    teamkills: 0,
+                    manualAdj: 0
+                };
+            });
+            window.state.history = [];
+            window.state.pastSeasons = [];
+            saveToStorage();
+        }
+
+        function saveToStorage() {
+            try {
+                localStorage.setItem('cs_arena_tracker_v5', JSON.stringify(window.state));
+            } catch(e) {
+                console.error("Kunne ikke lagre til localStorage", e);
+            }
+        }
+
+        function renderHistory() {
+            const feed = document.getElementById('activityFeed');
+            const count = document.getElementById('activityCount');
+            if (!feed || !count) return;
+            feed.innerHTML = '';
+
+            count.textContent = `${window.state.history.length} hendelser`;
+
+            if (window.state.history.length === 0) {
+                feed.innerHTML = `<div class="text-center py-8 text-slate-500 text-sm italic">Ingen hendelser i denne sesongen enda.</div>`;
+                return;
+            }
+
+            window.state.history.slice().reverse().forEach((item, index) => {
+                const actualIndex = window.state.history.length - 1 - index;
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-3 rounded-xl bg-slate-800/40 border border-slate-800 hover:border-slate-700/80 transition-all text-xs sm:text-sm";
+
+                let iconClass = "fa-hand-back-fist text-emerald-400";
+                let bgClass = "bg-emerald-500/10 border-emerald-500/30";
+                let description = "";
+                const cfg = window.state.settings;
+
+                if (item.actionType === 'knifeKill') {
+                    description = `<b class="text-white">${escapeHtml(item.player)}</b> knivet en motstander <span class="text-emerald-400 font-mono">(+${cfg.knifeKill})</span>`;
+                } else if (item.actionType === 'zeusKill') {
+                    iconClass = "fa-bolt text-cyan-400";
+                    bgClass = "bg-cyan-500/10 border-cyan-500/30";
+                    description = `<b class="text-white">${escapeHtml(item.player)}</b> zeuset en motstander <span class="text-cyan-400 font-mono">(+${cfg.zeusKill})</span>`;
+                } else if (item.actionType === 'knifeDeath') {
+                    iconClass = "fa-skull text-red-400";
+                    bgClass = "bg-red-500/10 border-red-500/30";
+                    description = `<b class="text-white">${escapeHtml(item.player)}</b> ble knivet av motstander <span class="text-red-400 font-mono">(${cfg.knifeDeath})</span>`;
+                } else if (item.actionType === 'zeusDeath') {
+                    iconClass = "fa-bolt-lightning text-purple-400";
+                    bgClass = "bg-purple-500/10 border-purple-500/30";
+                    description = `<b class="text-white">${escapeHtml(item.player)}</b> ble zeuset av motstander <span class="text-purple-400 font-mono">(${cfg.zeusDeath})</span>`;
+                } else if (item.actionType === 'teamkill') {
+                    iconClass = "fa-person-burst text-orange-400";
+                    bgClass = "bg-orange-500/10 border-orange-500/30";
+                    const victimTxt = item.victim ? ` (${escapeHtml(item.victim)})` : '';
+                    description = `<b class="text-white">${escapeHtml(item.player)}</b> teamkillet medspiller${victimTxt} <span class="text-orange-400 font-mono">(${cfg.teamkill})</span>`;
+                }
+
+                div.innerHTML = `
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-lg border ${bgClass} flex items-center justify-center">
+                            <i class="fa-solid ${iconClass}"></i>
+                        </div>
+                        <div>${description}</div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="text-[10px] text-slate-500 font-mono">${item.timestamp}</span>
+                        <button type="button" onclick="window.undoEvent(${actualIndex})" class="text-slate-500 hover:text-red-400 p-1 transition-colors cursor-pointer" title="Slett hendelse">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                feed.appendChild(div);
+            });
+        }
+
+        window.undoEvent = function(index) {
+            const item = window.state.history[index];
+            if (!item) return;
+
+            const target = window.state.players[item.player];
+            if (target) {
+                if (item.actionType === 'knifeKill') target.knifeKills = Math.max(0, target.knifeKills - 1);
+                else if (item.actionType === 'zeusKill') target.zeusKills = Math.max(0, target.zeusKills - 1);
+                else if (item.actionType === 'knifeDeath') target.knifeDeaths = Math.max(0, target.knifeDeaths - 1);
+                else if (item.actionType === 'zeusDeath') target.zeusDeaths = Math.max(0, target.zeusDeaths - 1);
+                else if (item.actionType === 'teamkill') target.teamkills = Math.max(0, (target.teamkills || 0) - 1);
+            }
+
+            window.state.history.splice(index, 1);
+            saveToStorage();
+            renderAll();
+        };
+
+        function populateSelectOptions() {
+            const playerSelect = document.getElementById('selectPlayer');
+            const tkVictimSelect = document.getElementById('selectTKVictim');
+
+            if (!playerSelect || !tkVictimSelect) return;
+
+            playerSelect.innerHTML = '<option value="">Velg spiller...</option>';
+            tkVictimSelect.innerHTML = '<option value="">Ingen valgt (Anonym medspiller)</option>';
+
+            Object.keys(window.state.players).forEach(name => {
+                playerSelect.innerHTML += `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`;
+                tkVictimSelect.innerHTML += `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`;
+            });
+        }
+
+        function getAllTimeTotals() {
+            const totals = {};
+            DEFAULT_PLAYERS.forEach(name => {
+                totals[name] = {
+                    name: name,
+                    knifeKills: 0,
+                    knifeDeaths: 0,
+                    zeusKills: 0,
+                    zeusDeaths: 0,
+                    teamkills: 0,
+                    totalPoints: 0
+                };
+            });
+
+            window.state.pastSeasons.forEach(s => {
+                Object.values(s.players).forEach(p => {
+                    if (!totals[p.name]) {
+                        totals[p.name] = { name: p.name, knifeKills: 0, knifeDeaths: 0, zeusKills: 0, zeusDeaths: 0, teamkills: 0, totalPoints: 0 };
+                    }
+                    totals[p.name].knifeKills += p.knifeKills || 0;
+                    totals[p.name].knifeDeaths += p.knifeDeaths || 0;
+                    totals[p.name].zeusKills += p.zeusKills || 0;
+                    totals[p.name].zeusDeaths += p.zeusDeaths || 0;
+                    totals[p.name].teamkills += p.teamkills || 0;
+                    totals[p.name].totalPoints += calculatePoints(p, s.settings);
+                });
+            });
+
+            Object.values(window.state.players).forEach(p => {
+                if (!totals[p.name]) {
+                    totals[p.name] = { name: p.name, knifeKills: 0, knifeDeaths: 0, zeusKills: 0, zeusDeaths: 0, teamkills: 0, totalPoints: 0 };
+                }
+                totals[p.name].knifeKills += p.knifeKills || 0;
+                totals[p.name].knifeDeaths += p.knifeDeaths || 0;
+                totals[p.name].zeusKills += p.zeusKills || 0;
+                totals[p.name].zeusDeaths += p.zeusDeaths || 0;
+                totals[p.name].teamkills += p.teamkills || 0;
+                totals[p.name].totalPoints += calculatePoints(p);
+            });
+
+            return Object.values(totals);
+        }
+
+        function renderAllTimeLeaderboard() {
+            const tbody = document.getElementById('allTimeLeaderboardBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const totals = getAllTimeTotals().sort((a, b) => b.totalPoints - a.totalPoints);
+
+            totals.forEach((player, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/40 transition-colors text-sm';
+
+                let rankBadge = `<span class="font-mono text-slate-500">${idx + 1}</span>`;
+                if (idx === 0) rankBadge = `<span class="text-amber-400 font-bold"><i class="fa-solid fa-trophy"></i></span>`;
+                if (idx === 1) rankBadge = `<span class="text-slate-300 font-bold"><i class="fa-solid fa-medal"></i></span>`;
+                if (idx === 2) rankBadge = `<span class="text-amber-700 font-bold"><i class="fa-solid fa-award"></i></span>`;
+
+                tr.innerHTML = `
+                    <td class="py-4 px-3 text-center">${rankBadge}</td>
+                    <td class="py-4 px-3 font-semibold text-white">${escapeHtml(player.name)}</td>
+                    <td class="py-4 px-3 text-center font-mono font-bold text-emerald-400">${player.knifeKills}</td>
+                    <td class="py-4 px-3 text-center font-mono font-bold text-cyan-400">${player.zeusKills}</td>
+                    <td class="py-4 px-3 text-center font-mono font-bold text-orange-400">${player.teamkills}</td>
+                    <td class="py-4 px-3 text-center font-mono font-bold text-purple-400">${player.knifeDeaths + player.zeusDeaths}</td>
+                    <td class="py-4 px-3 text-center font-mono font-extrabold text-base ${player.totalPoints >= 0 ? 'text-amber-400' : 'text-red-400'}">
+                        ${player.totalPoints > 0 ? '+' : ''}${player.totalPoints}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderPastSeasonsList() {
+            const container = document.getElementById('pastSeasonsList');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (window.state.pastSeasons.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-500 italic col-span-2">Ingen sesonger er fullført eller arkiverte enda.</p>`;
+                return;
+            }
+
+            window.state.pastSeasons.slice().reverse().forEach(season => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-800/60 border border-slate-700/60 rounded-xl p-4";
+
+                const sorted = Object.values(season.players).sort((a, b) => calculatePoints(b, season.settings) - calculatePoints(a, season.settings));
+                const winner = sorted[0];
+
+                div.innerHTML = `
+                    <div class="flex justify-between items-center mb-2 pb-2 border-b border-slate-700/50">
+                        <h4 class="cs-font text-lg font-bold text-amber-400">${escapeHtml(season.name)}</h4>
+                        <span class="text-[10px] text-slate-400 font-mono">${season.archivedAt}</span>
+                    </div>
+                    <div class="text-xs text-slate-300 space-y-1">
+                        <p><i class="fa-solid fa-trophy text-amber-400 mr-1"></i> Vinner: <b>${escapeHtml(winner ? winner.name : 'N/A')}</b> (${winner ? calculatePoints(winner, season.settings) : 0} pt)</p>
+                        <p><i class="fa-solid fa-list-check mr-1 text-slate-400"></i> Antall hendelser: ${season.history ? season.history.length : 0}</p>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function renderChart() {
+            const ctx = document.getElementById('seasonChart');
+            if (!ctx) return;
+
+            const labels = window.state.pastSeasons.map(function(s) { return s.name; });
+            labels.push(`${window.state.currentSeasonName} (Nå)`);
+            labels.push("Neste Sesong (Prognose)");
+
+            const datasets = DEFAULT_PLAYERS.map(function(pName) {
+                const dataPoints = [];
+
+                window.state.pastSeasons.forEach(function(s) {
+                    const p = s.players[pName];
+                    dataPoints.push(p ? calculatePoints(p, s.settings) : 0);
+                });
+
+                const activeP = window.state.players[pName];
+                const activePts = activeP ? calculatePoints(activeP) : 0;
+                dataPoints.push(activePts);
+
+                const avg = dataPoints.reduce(function(a, b) { return a + b; }, 0) / dataPoints.length;
+                const nextPrognosis = Math.round(avg * 1.1);
+                dataPoints.push(nextPrognosis);
+
+                return {
+                    label: pName,
+                    data: dataPoints,
+                    borderColor: PLAYER_COLORS[pName] || '#3b82f6',
+                    backgroundColor: PLAYER_COLORS[pName] || '#3b82f6',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    pointRadius: 5,
+                    segment: {
+                        borderDash: function(ctx) {
+                            return ctx.p0DataIndex === dataPoints.length - 2 ? [6, 6] : undefined;
+                        }
+                    }
+                };
+            });
+
+            if (myChartInstance) {
+                myChartInstance.destroy();
+            }
+
+            myChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#e2e8f0', font: { family: 'Rajdhani', size: 14 } }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) label += ': ';
+                                    if (context.dataIndex === context.dataset.data.length - 1) {
+                                        return label + context.raw + ' pt (Prognose)';
+                                    }
+                                    return label + context.raw + ' pt';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: '#1e293b' }
+                        },
+                        y: {
+                            ticks: { color: '#94a3b8' },
+                            grid: { color: '#1e293b' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function calculatePoints(player, customSettings) {
+            const cfg = customSettings || window.state.settings;
+            if (!player) return 0;
+            const knifeKillPts = (player.knifeKills || 0) * cfg.knifeKill;
+            const knifeDeathPts = (player.knifeDeaths || 0) * cfg.knifeDeath;
+            const zeusKillPts = (player.zeusKills || 0) * cfg.zeusKill;
+            const zeusDeathPts = (player.zeusDeaths || 0) * cfg.zeusDeath;
+            const tkPts = (player.teamkills || 0) * cfg.teamkill;
+            const manual = player.manualAdj || 0;
+
+            return knifeKillPts + knifeDeathPts + zeusKillPts + zeusDeathPts + tkPts + manual;
+        }
+
+        function updateBadges() {
+            const players = Object.values(window.state.players);
+
+            let knifeKing = [...players].sort((a, b) => b.knifeKills - a.knifeKills)[0];
+            if (knifeKing && knifeKing.knifeKills > 0) {
+                document.getElementById('badgeKnifeKing').textContent = knifeKing.name;
+                document.getElementById('badgeKnifeKingStats').textContent = `${knifeKing.knifeKills} knivdrap`;
+            } else {
+                document.getElementById('badgeKnifeKing').textContent = 'Ingen ennå';
+                document.getElementById('badgeKnifeKingStats').textContent = '0 knivdrap';
+            }
+
+            let zeusMaster = [...players].sort((a, b) => b.zeusKills - a.zeusKills)[0];
+            if (zeusMaster && zeusMaster.zeusKills > 0) {
+                document.getElementById('badgeZeusMaster').textContent = zeusMaster.name;
+                document.getElementById('badgeZeusMasterStats').textContent = `${zeusMaster.zeusKills} taser-drap`;
+            } else {
+                document.getElementById('badgeZeusMaster').textContent = 'Ingen ennå';
+                document.getElementById('badgeZeusMasterStats').textContent = '0 taser-drap';
+            }
+
+            let unluckiest = [...players].sort((a, b) => (b.knifeDeaths + b.zeusDeaths) - (a.knifeDeaths + a.zeusDeaths))[0];
+            const totalDeaths = unluckiest ? (unluckiest.knifeDeaths + unluckiest.zeusDeaths) : 0;
+            if (unluckiest && totalDeaths > 0) {
+                document.getElementById('badgeUnluckiest').textContent = unluckiest.name;
+                document.getElementById('badgeUnluckiestStats').textContent = `${totalDeaths}x drept av fienden`;
+            } else {
+                document.getElementById('badgeUnluckiest').textContent = 'Ingen ennå';
+                document.getElementById('badgeUnluckiestStats').textContent = '0 ydmykelser';
+            }
+
+            let tkKing = [...players].sort((a, b) => (b.teamkills || 0) - (a.teamkills || 0))[0];
+            if (tkKing && (tkKing.teamkills || 0) > 0) {
+                document.getElementById('badgeTKKing').textContent = tkKing.name;
+                document.getElementById('badgeTKKingStats').textContent = `${tkKing.teamkills} medspillere drept`;
+            } else {
+                document.getElementById('badgeTKKing').textContent = 'Ingen ennå';
+                document.getElementById('badgeTKKingStats').textContent = '0 teamkills';
+            }
+        }
+
+        function renderLeaderboard() {
+            const tbody = document.getElementById('leaderboardBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const sorted = Object.values(window.state.players).sort((a, b) => calculatePoints(b) - calculatePoints(a));
+
+            sorted.forEach((player, idx) => {
+                const points = calculatePoints(player);
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/40 transition-colors text-xs sm:text-sm';
+
+                let rankBadge = `<span class="font-mono text-slate-500">${idx + 1}</span>`;
+                if (idx === 0) rankBadge = `<span class="text-amber-400 font-bold"><i class="fa-solid fa-crown"></i></span>`;
+                if (idx === 1) rankBadge = `<span class="text-slate-300 font-bold"><i class="fa-solid fa-medal"></i></span>`;
+                if (idx === 2) rankBadge = `<span class="text-amber-700 font-bold"><i class="fa-solid fa-award"></i></span>`;
+
+                tr.innerHTML = `
+                    <td class="py-3.5 px-3 text-center">${rankBadge}</td>
+                    <td class="py-3.5 px-3 font-semibold text-white">${escapeHtml(player.name)}</td>
+                    <td class="py-3.5 px-3 text-center font-mono text-slate-300">
+                        <span class="text-emerald-400 font-bold">${player.knifeKills}</span> / <span class="text-red-400">${player.knifeDeaths}</span>
+                    </td>
+                    <td class="py-3.5 px-3 text-center font-mono text-slate-300">
+                        <span class="text-cyan-400 font-bold">${player.zeusKills}</span> / <span class="text-purple-400">${player.zeusDeaths}</span>
+                    </td>
+                    <td class="py-3.5 px-3 text-center font-mono font-bold text-orange-400">${player.teamkills || 0}</td>
+                    <td class="py-3.5 px-3 text-center font-mono font-extrabold text-base ${points >= 0 ? 'text-amber-400' : 'text-red-400'}">
+                        ${points > 0 ? '+' : ''}${points}
+                    </td>
+                    <td class="py-3.5 px-3 text-right">
+                        <div class="flex items-center justify-end space-x-1">
+                            <button type="button" onclick="window.adjustScore('${escapeHtml(player.name)}', 1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded flex items-center justify-center font-bold text-xs transition-colors cursor-pointer" title="+1 poeng">+1</button>
+                            <button type="button" onclick="window.adjustScore('${escapeHtml(player.name)}', -1)" class="w-7 h-7 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded flex items-center justify-center font-bold text-xs transition-colors cursor-pointer" title="-1 poeng">-1</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderPlayerGrid() {
+            const grid = document.getElementById('playerGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            Object.values(window.state.players).forEach(player => {
+                const points = calculatePoints(player);
+                const card = document.createElement('div');
+                card.className = "bg-slate-900/80 border border-slate-800 hover:border-amber-500/30 rounded-2xl p-4 sm:p-5 transition-all shadow-lg flex flex-col justify-between";
+
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-3">
+                            <h3 class="cs-font text-xl font-bold text-white tracking-wide">${escapeHtml(player.name)}</h3>
+                            <span class="cs-font text-xl font-extrabold px-3 py-1 bg-slate-800 border border-slate-700/80 rounded-xl ${points >= 0 ? 'text-amber-400' : 'text-red-400'}">
+                                ${points > 0 ? '+' : ''}${points} pt
+                            </span>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-2 text-center text-xs mb-4">
+                            <div class="bg-slate-800/40 border border-slate-800 rounded-lg p-2">
+                                <span class="text-slate-400 block text-[10px] uppercase font-bold">Kniv</span>
+                                <span class="font-mono text-emerald-400 font-bold">${player.knifeKills}</span> / <span class="font-mono text-red-400">${player.knifeDeaths}</span>
+                            </div>
+                            <div class="bg-slate-800/40 border border-slate-800 rounded-lg p-2">
+                                <span class="text-slate-400 block text-[10px] uppercase font-bold">Zeus</span>
+                                <span class="font-mono text-cyan-400 font-bold">${player.zeusKills}</span> / <span class="font-mono text-purple-400">${player.zeusDeaths}</span>
+                            </div>
+                            <div class="bg-slate-800/40 border border-slate-800 rounded-lg p-2">
+                                <span class="text-slate-400 block text-[10px] uppercase font-bold">TK</span>
+                                <span class="font-mono text-orange-400 font-bold">${player.teamkills || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                        <button type="button" onclick="window.quickLog('${escapeHtml(player.name)}', 'knifeKill')" class="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold py-2 rounded-xl text-xs uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+                            <i class="fa-solid fa-hand-back-fist"></i> + Knivet
+                        </button>
+                        <button type="button" onclick="window.quickLog('${escapeHtml(player.name)}', 'zeusKill')" class="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 font-bold py-2 rounded-xl text-xs uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+                            <i class="fa-solid fa-bolt"></i> + Zeuset
+                        </button>
+                        <button type="button" onclick="window.quickLog('${escapeHtml(player.name)}', 'knifeDeath')" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-bold py-2 rounded-xl text-xs uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+                            <i class="fa-solid fa-skull"></i> - Ble Knivet
+                        </button>
+                        <button type="button" onclick="window.quickLog('${escapeHtml(player.name)}', 'zeusDeath')" class="bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/30 font-bold py-2 rounded-xl text-xs uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer">
+                            <i class="fa-solid fa-bolt-lightning"></i> - Ble Zeuset
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        window.quickLog = function(playerName, actionType) {
+            const target = window.state.players[playerName];
+            if (!target) return;
+
+            if (actionType === 'knifeKill') target.knifeKills += 1;
+            else if (actionType === 'zeusKill') target.zeusKills += 1;
+            else if (actionType === 'knifeDeath') target.knifeDeaths += 1;
+            else if (actionType === 'zeusDeath') target.zeusDeaths += 1;
+
+            const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            window.state.history.push({
+                player: playerName,
+                actionType: actionType,
+                timestamp: timeStr
+            });
+
+            saveToStorage();
+            renderAll();
+        };
+
+        window.adjustScore = function(playerName, amount) {
+            const target = window.state.players[playerName];
+            if (!target) return;
+            target.manualAdj = (target.manualAdj || 0) + amount;
+            saveToStorage();
+            renderAll();
+        };
+
+        window.switchTab = function(tab) {
+            const activeView = document.getElementById('viewActiveSeason');
+            const allTimeView = document.getElementById('viewAllTime');
+            const tabActive = document.getElementById('tabActiveSeason');
+            const tabAllTime = document.getElementById('tabAllTime');
+
+            if (tab === 'active') {
+                activeView?.classList.remove('hidden');
+                allTimeView?.classList.add('hidden');
+                tabActive?.classList.add('border-amber-500', 'text-amber-400');
+                tabActive?.classList.remove('border-transparent', 'text-slate-400');
+                tabAllTime?.classList.remove('border-amber-500', 'text-amber-400');
+                tabAllTime?.classList.add('border-transparent', 'text-slate-400');
+            } else {
+                activeView?.classList.add('hidden');
+                allTimeView?.classList.remove('hidden');
+                tabAllTime?.classList.add('border-amber-500', 'text-amber-400');
+                tabAllTime?.classList.remove('border-transparent', 'text-slate-400');
+                tabActive?.classList.remove('border-amber-500', 'text-amber-400');
+                tabActive?.classList.add('border-transparent', 'text-slate-400');
+
+                renderAllTimeLeaderboard();
+                renderPastSeasonsList();
+                renderChart();
+            }
+        };
+
+        function renderAll() {
+            const label = document.getElementById('activeSeasonLabel');
+            if (label) {
+                label.innerHTML = `<i class="fa-solid fa-flag-checkered text-amber-400"></i> Aktiv: ${escapeHtml(window.state.currentSeasonName)}`;
+            }
+
+            updateBadges();
+            renderLeaderboard();
+            renderPlayerGrid();
+            renderHistory();
+            populateSelectOptions();
+
+            const cfg = window.state.settings;
+            document.getElementById('badgePtsKnifeKill').textContent = `+${cfg.knifeKill} pt`;
+            document.getElementById('badgePtsZeusKill').textContent = `+${cfg.zeusKill} pt`;
+            document.getElementById('badgePtsKnifeDeath').textContent = `${cfg.knifeDeath} pt`;
+            document.getElementById('badgePtsZeusDeath').textContent = `${cfg.zeusDeath} pt`;
+            document.getElementById('badgePtsTK').textContent = `${cfg.teamkill} pt`;
+        }
+
+        window.openLogModal = function() {
+            document.getElementById('logModal')?.classList.remove('hidden');
+        };
+        window.closeLogModal = function() {
+            document.getElementById('logModal')?.classList.add('hidden');
+        };
+        window.openSettingsModal = function() {
+            document.getElementById('cfgKnifeKill').value = window.state.settings.knifeKill;
+            document.getElementById('cfgKnifeDeath').value = window.state.settings.knifeDeath;
+            document.getElementById('cfgZeusKill').value = window.state.settings.zeusKill;
+            document.getElementById('cfgZeusDeath').value = window.state.settings.zeusDeath;
+            document.getElementById('cfgTeamkill').value = window.state.settings.teamkill;
+            document.getElementById('settingsModal')?.classList.remove('hidden');
+        };
+        window.closeSettingsModal = function() {
+            document.getElementById('settingsModal')?.classList.add('hidden');
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromStorage();
+            renderAll();
+
+            document.getElementById('btnOpenLog')?.addEventListener('click', window.openLogModal);
+            document.getElementById('btnCloseLog')?.addEventListener('click', window.closeLogModal);
+            document.getElementById('btnOpenSettings')?.addEventListener('click', window.openSettingsModal);
+            document.getElementById('btnCloseSettings')?.addEventListener('click', window.closeSettingsModal);
+            document.getElementById('btnCancelSettings')?.addEventListener('click', window.closeSettingsModal);
+
+            document.getElementById('btnOpenNewSeason')?.addEventListener('click', function() {
+                document.getElementById('inputSeasonTitle').value = `Sesong ${window.state.pastSeasons.length + 2}`;
+                document.getElementById('newSeasonModal')?.classList.remove('hidden');
+            });
+            document.getElementById('btnCloseNewSeason')?.addEventListener('click', function() {
+                document.getElementById('newSeasonModal')?.classList.add('hidden');
+            });
+
+            document.getElementById('newSeasonForm')?.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const title = document.getElementById('inputSeasonTitle').value || `Sesong ${window.state.pastSeasons.length + 1}`;
+
+                window.state.pastSeasons.push({
+                    name: window.state.currentSeasonName,
+                    archivedAt: new Date().toLocaleDateString(),
+                    players: JSON.parse(JSON.stringify(window.state.players)),
+                    history: JSON.parse(JSON.stringify(window.state.history)),
+                    settings: JSON.parse(JSON.stringify(window.state.settings))
+                });
+
+                window.state.currentSeasonName = title;
+                DEFAULT_PLAYERS.forEach(function(name) {
+                    window.state.players[name] = {
+                        name: name,
+                        knifeKills: 0,
+                        knifeDeaths: 0,
+                        zeusKills: 0,
+                        zeusDeaths: 0,
+                        teamkills: 0,
+                        manualAdj: 0
+                    };
+                });
+                window.state.history = [];
+
+                saveToStorage();
+                renderAll();
+                document.getElementById('newSeasonModal')?.classList.add('hidden');
+                alert(`Arkiverte forrige sesong og startet "${title}"!`);
+            });
+
+            document.getElementById('btnResetData')?.addEventListener('click', function() {
+                document.getElementById('resetModal')?.classList.remove('hidden');
+            });
+            document.getElementById('btnCancelReset')?.addEventListener('click', function() {
+                document.getElementById('resetModal')?.classList.add('hidden');
+            });
+            document.getElementById('btnConfirmReset')?.addEventListener('click', function() {
+                setupInitialState();
+                renderAll();
+                document.getElementById('resetModal')?.classList.add('hidden');
+            });
+
+            const actionTypeInputs = document.querySelectorAll('input[name="actionType"]');
+            actionTypeInputs.forEach(function(input) {
+                input.addEventListener('change', function() {
+                    const tkWrapper = document.getElementById('tkVictimWrapper');
+                    if (this.value === 'teamkill') {
+                        tkWrapper?.classList.remove('hidden');
+                    } else {
+                        tkWrapper?.classList.add('hidden');
+                    }
+                });
+            });
+
+            document.getElementById('logForm')?.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                const player = document.getElementById('selectPlayer').value;
+                const actionRadio = document.querySelector('input[name="actionType"]:checked');
+                const actionType = actionRadio ? actionRadio.value : 'knifeKill';
+                const victim = document.getElementById('selectTKVictim').value;
+
+                if (!player) {
+                    alert('Vennligst velg en spiller!');
+                    return;
+                }
+
+                if (actionType === 'teamkill' && victim && victim === player) {
+                    alert('Du kan ikke velge deg selv som offer for teamkill!');
+                    return;
+                }
+
+                const target = window.state.players[player];
+                if (target) {
+                    if (actionType === 'knifeKill') target.knifeKills += 1;
+                    else if (actionType === 'zeusKill') target.zeusKills += 1;
+                    else if (actionType === 'knifeDeath') target.knifeDeaths += 1;
+                    else if (actionType === 'zeusDeath') target.zeusDeaths += 1;
+                    else if (actionType === 'teamkill') target.teamkills = (target.teamkills || 0) + 1;
+                }
+
+                const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                window.state.history.push({
+                    player: player,
+                    actionType: actionType,
+                    victim: actionType === 'teamkill' ? victim : null,
+                    timestamp: timeStr
+                });
+
+                saveToStorage();
+                renderAll();
+                window.closeLogModal();
+            });
+
+            document.getElementById('settingsForm')?.addEventListener('submit', function(e) {
+                e.preventDefault();
+                window.state.settings.knifeKill = parseInt(document.getElementById('cfgKnifeKill').value) || 3;
+                window.state.settings.knifeDeath = parseInt(document.getElementById('cfgKnifeDeath').value) || -3;
+                window.state.settings.zeusKill = parseInt(document.getElementById('cfgZeusKill').value) || 2;
+                window.state.settings.zeusDeath = parseInt(document.getElementById('cfgZeusDeath').value) || -2;
+                window.state.settings.teamkill = parseInt(document.getElementById('cfgTeamkill').value) || -2;
+
+                saveToStorage();
+                renderAll();
+                window.closeSettingsModal();
+            });
+
+            ['logModal', 'settingsModal', 'resetModal', 'newSeasonModal'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('click', function(e) {
+                        if (e.target === el) {
+                            el.classList.add('hidden');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
