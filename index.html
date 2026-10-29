@@ -187,8 +187,8 @@
                             <tr class="bg-slate-900/50 text-slate-400 text-xs uppercase font-cs tracking-wider border-b border-slate-800">
                                 <th class="py-3.5 px-4 font-bold">#</th>
                                 <th class="py-3.5 px-4 font-bold">SPILLER</th>
-                                <th class="py-3.5 px-4 font-bold text-center">KNIV-DRAP MOT MOTSTANDER</th>
-                                <th class="py-3.5 px-4 font-bold text-center">ZEUS-DRAP MOT MOTSTANDER</th>
+                                <th class="py-3.5 px-4 font-bold text-center">KNIV-DRAP / DØD</th>
+                                <th class="py-3.5 px-4 font-bold text-center">ZEUS-DRAP / DØD</th>
                                 <th class="py-3.5 px-4 font-bold text-center">TEAMKILLS</th>
                                 <th class="py-3.5 px-4 font-bold text-center">TOTALT POENG</th>
                                 <th class="py-3.5 px-4 font-bold text-right">HURTIGREGISTER</th>
@@ -269,7 +269,9 @@
                     <label class="block text-xs font-bold uppercase text-slate-400 mb-1">Handlingstype</label>
                     <select id="actionType" onchange="window.handleActionTypeChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
                         <option value="knifeKill">🗡️ Kniv-drap på motstander (+3p)</option>
+                        <option value="knifeDeath">💀 Ble knivet av motstander (-3p)</option>
                         <option value="zeusKill">⚡ Zeus-drap på motstander (+2p)</option>
+                        <option value="zeusDeath">⚡ Ble zeusset av motstander (-2p)</option>
                         <option value="teamkill">⚠️ Teamkill på lagkamerat (-2p)</option>
                     </select>
                 </div>
@@ -282,8 +284,8 @@
                 </div>
 
                 <div id="victimContainer">
-                    <label id="victimLabel" class="block text-xs font-bold uppercase text-slate-400 mb-1">Hvem ble knivet/zeusset? (Valgfritt navn på motstander)</label>
-                    <input type="text" id="victimInput" placeholder="F.eks. 'Motstander' eller navnet på fienden" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
+                    <label id="victimLabel" class="block text-xs font-bold uppercase text-slate-400 mb-1">Motstander / Merknad (Valgfritt)</label>
+                    <input type="text" id="victimInput" placeholder="F.eks. 'Motstander'" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:outline-none focus:border-amber-500">
                 </div>
 
                 <button type="submit" class="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold font-cs text-base rounded-lg transition shadow-lg shadow-amber-500/20">
@@ -308,8 +310,16 @@
                     <input type="number" id="cfgKnifeKill" class="w-16 bg-slate-800 text-center rounded p-1 border border-slate-700 text-amber-400 font-bold">
                 </div>
                 <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                    <span class="text-slate-300">Ble knivet (Død)</span>
+                    <input type="number" id="cfgKnifeDeath" class="w-16 bg-slate-800 text-center rounded p-1 border border-slate-700 text-red-400 font-bold">
+                </div>
+                <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-800">
                     <span class="text-slate-300">Zeusdrap (Motstander)</span>
                     <input type="number" id="cfgZeusKill" class="w-16 bg-slate-800 text-center rounded p-1 border border-slate-700 text-cyan-400 font-bold">
+                </div>
+                <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-800">
+                    <span class="text-slate-300">Ble zeusset (Død)</span>
+                    <input type="number" id="cfgZeusDeath" class="w-16 bg-slate-800 text-center rounded p-1 border border-slate-700 text-purple-400 font-bold">
                 </div>
                 <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-800">
                     <span class="text-slate-300">Teamkill (Lagkamerat)</span>
@@ -329,7 +339,9 @@
 
         const DEFAULT_SETTINGS = {
             knifeKill: 3,
+            knifeDeath: -3,
             zeusKill: 2,
+            zeusDeath: -2,
             teamkill: -2
         };
 
@@ -338,7 +350,9 @@
             players: DEFAULT_PLAYERS.map(name => ({
                 name: name,
                 knifeKills: 0,
+                knifeDeaths: 0,
                 zeusKills: 0,
+                zeusDeaths: 0,
                 teamkills: 0
             })),
             history: [],
@@ -359,14 +373,17 @@
                 window.state.players = DEFAULT_PLAYERS.map(name => ({
                     name: name,
                     knifeKills: 0,
+                    knifeDeaths: 0,
                     zeusKills: 0,
+                    zeusDeaths: 0,
                     teamkills: 0
                 }));
             } else {
-                // Sikre at eldre lagrede spillere får de nye feltene om de mangler
                 window.state.players.forEach(p => {
                     if (p.knifeKills === undefined) p.knifeKills = 0;
+                    if (p.knifeDeaths === undefined) p.knifeDeaths = 0;
                     if (p.zeusKills === undefined) p.zeusKills = 0;
+                    if (p.zeusDeaths === undefined) p.zeusDeaths = 0;
                     if (p.teamkills === undefined) p.teamkills = 0;
                 });
             }
@@ -395,7 +412,9 @@
         function calculatePoints(p) {
             const s = window.state.settings;
             return (p.knifeKills * s.knifeKill) +
+                   (p.knifeDeaths * s.knifeDeath) +
                    (p.zeusKills * s.zeusKill) +
+                   (p.zeusDeaths * s.zeusDeath) +
                    (p.teamkills * s.teamkill);
         }
 
@@ -436,15 +455,19 @@
                 tr.innerHTML = `
                     <td class="py-4 px-4 font-mono">${rankBadge}</td>
                     <td class="py-4 px-4 font-bold text-slate-100 font-cs text-base">${p.name}</td>
-                    <td class="py-4 px-4 text-center font-bold text-red-400">${p.knifeKills}</td>
-                    <td class="py-4 px-4 text-center font-bold text-cyan-400">${p.zeusKills}</td>
+                    <td class="py-4 px-4 text-center">
+                        <span class="text-red-400 font-bold">${p.knifeKills}</span> / <span class="text-slate-500">${p.knifeDeaths}</span>
+                    </td>
+                    <td class="py-4 px-4 text-center">
+                        <span class="text-cyan-400 font-bold">${p.zeusKills}</span> / <span class="text-slate-500">${p.zeusDeaths}</span>
+                    </td>
                     <td class="py-4 px-4 text-center font-bold text-purple-400">${p.teamkills}</td>
                     <td class="py-4 px-4 text-center font-bold text-lg ${pts >= 0 ? 'text-amber-400' : 'text-red-500'} font-mono">
                         ${pts > 0 ? '+' + pts : pts}
                     </td>
                     <td class="py-4 px-4 text-right space-x-1">
                         <button onclick="window.quickAdd('${p.name}', 'knifeKill')" class="px-2 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs rounded border border-red-500/30">+Kniv</button>
-                        <button onclick="window.quickAdd('${p.name}', 'zeusKill')" class="px-2 py-1 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs rounded border border-cyan-500/30">+Zeus</button>
+                        <button onclick="window.quickAdd('${p.name}', 'knifeDeath')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-400 text-xs rounded border border-slate-700">-Kniv</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -496,7 +519,6 @@
             document.getElementById('badgeTKKing').textContent = tkKing && tkKing.teamkills > 0 ? tkKing.name : 'Ingen ennå';
             document.getElementById('badgeTKKingSub').textContent = tkKing && tkKing.teamkills > 0 ? `${tkKing.teamkills} teamkills` : 'Flest teamkills begått';
 
-            // Samlet lagpoengsum
             const totalTeamScore = players.reduce((sum, p) => sum + calculatePoints(p), 0);
             document.getElementById('badgeTotalTeamScore').textContent = (totalTeamScore > 0 ? '+' + totalTeamScore : totalTeamScore) + ' p';
         }
@@ -517,8 +539,10 @@
 
                 let actionText = "";
                 if (item.actionType === 'knifeKill') actionText = `<span class="text-red-400 font-bold">${item.player}</span> knivet motstander <span class="text-slate-400">(${item.victim || 'Motstander'})</span>`;
+                if (item.actionType === 'knifeDeath') actionText = `<span class="text-slate-300 font-bold">${item.player}</span> ble knivet av fienden!`;
                 if (item.actionType === 'zeusKill') actionText = `<span class="text-cyan-400 font-bold">${item.player}</span> tok <span class="text-slate-400">${item.victim || 'Motstander'}</span> med Zeus!`;
-                if (item.actionType === 'teamkill') actionText = `<span class="text-purple-400 font-bold">${item.player}</span> begikk teamkill på lagkamerat <span class="text-slate-400">(${item.victim || 'Lagkamerat'})</span>`;
+                if (item.actionType === 'zeusDeath') actionText = `<span class="text-slate-300 font-bold">${item.player}</span> ble zeusset av fienden!`;
+                if (item.actionType === 'teamkill') actionText = `<span class="text-purple-400 font-bold">${item.player}</span> begikk teamkill på <span class="text-slate-400">(${item.victim || 'Lagkamerat'})</span>`;
 
                 div.innerHTML = `<div>${actionText}</div><div class="text-slate-500 font-mono text-[10px]">${item.timestamp || ''}</div>`;
                 feed.appendChild(div);
@@ -542,12 +566,17 @@
 
             if (actionType === 'teamkill') {
                 playerLabel.textContent = "Hvem begikk teamkill?";
-                victimLabel.textContent = "Hvem ble drept i laget? (Navn på lagkamerat)";
+                victimLabel.textContent = "Hvem ble drept i laget?";
                 document.getElementById('victimInput').placeholder = "Navn på lagkamerat";
+                victimContainer.style.display = 'block';
+            } else if (actionType === 'knifeDeath' || actionType === 'zeusDeath') {
+                playerLabel.textContent = "Hvem på laget ble drept?";
+                victimContainer.style.display = 'none'; // Trenger ikke offer-felt når det er en selv som dør
             } else {
                 playerLabel.textContent = "Hvem utførte drapet?";
-                victimLabel.textContent = "Hvem ble knivet/zeusset? (Valgfritt navn på motstander)";
-                document.getElementById('victimInput').placeholder = "F.eks. 'Motstander' eller fiendens navn";
+                victimLabel.textContent = "Motstander / Merknad (Valgfritt)";
+                document.getElementById('victimInput').placeholder = "F.eks. 'Motstander'";
+                victimContainer.style.display = 'block';
             }
         };
 
@@ -556,12 +585,14 @@
             if (!player) return;
 
             if (type === 'knifeKill') player.knifeKills++;
+            if (type === 'knifeDeath') player.knifeDeaths++;
             if (type === 'zeusKill') player.zeusKills++;
+            if (type === 'zeusDeath') player.zeusDeaths++;
             if (type === 'teamkill') player.teamkills++;
 
             window.state.history.push({
                 player: playerName,
-                victim: type === 'teamkill' ? 'Lagkamerat' : 'Motstander',
+                victim: 'Motstander',
                 actionType: type,
                 timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
             });
@@ -581,7 +612,9 @@
 
             if (p) {
                 if (lastEvent.actionType === 'knifeKill' && p.knifeKills > 0) p.knifeKills--;
+                if (lastEvent.actionType === 'knifeDeath' && p.knifeDeaths > 0) p.knifeDeaths--;
                 if (lastEvent.actionType === 'zeusKill' && p.zeusKills > 0) p.zeusKills--;
+                if (lastEvent.actionType === 'zeusDeath' && p.zeusDeaths > 0) p.zeusDeaths--;
                 if (lastEvent.actionType === 'teamkill' && p.teamkills > 0) p.teamkills--;
             }
 
@@ -601,8 +634,8 @@
 
                 window.state.season++;
                 window.state.players.forEach(p => {
-                    p.knifeKills = 0;
-                    p.zeusKills = 0;
+                    p.knifeKills = 0; p.knifeDeaths = 0;
+                    p.zeusKills = 0; p.zeusDeaths = 0;
                     p.teamkills = 0;
                 });
                 window.state.history = [];
@@ -662,7 +695,9 @@
                 const data = window.state.history.map(h => {
                     if (h.player === p.name) {
                         if (h.actionType === 'knifeKill') cumulative += window.state.settings.knifeKill;
+                        if (h.actionType === 'knifeDeath') cumulative += window.state.settings.knifeDeath;
                         if (h.actionType === 'zeusKill') cumulative += window.state.settings.zeusKill;
+                        if (h.actionType === 'zeusDeath') cumulative += window.state.settings.zeusDeath;
                         if (h.actionType === 'teamkill') cumulative += window.state.settings.teamkill;
                     }
                     return cumulative;
@@ -702,7 +737,9 @@
         
         window.openSettingsModal = () => {
             document.getElementById('cfgKnifeKill').value = window.state.settings.knifeKill;
+            document.getElementById('cfgKnifeDeath').value = window.state.settings.knifeDeath;
             document.getElementById('cfgZeusKill').value = window.state.settings.zeusKill;
+            document.getElementById('cfgZeusDeath').value = window.state.settings.zeusDeath;
             document.getElementById('cfgTeamkill').value = window.state.settings.teamkill;
             document.getElementById('settingsModal').classList.remove('hidden');
         };
@@ -713,17 +750,15 @@
             const actionType = document.getElementById('actionType').value;
             const player = document.getElementById('playerSelect').value;
             const victimText = document.getElementById('victimInput').value.trim();
-            const victim = victimText ? victimText : (actionType === 'teamkill' ? 'Lagkamerat' : 'Motstander');
+            const victim = victimText ? victimText : 'Motstander';
 
             const p = window.state.players.find(x => x.name === player);
 
-            if (actionType === 'knifeKill') {
-                if (p) p.knifeKills++;
-            } else if (actionType === 'zeusKill') {
-                if (p) p.zeusKills++;
-            } else if (actionType === 'teamkill') {
-                if (p) p.teamkills++;
-            }
+            if (actionType === 'knifeKill') { if (p) p.knifeKills++; }
+            else if (actionType === 'knifeDeath') { if (p) p.knifeDeaths++; }
+            else if (actionType === 'zeusKill') { if (p) p.zeusKills++; }
+            else if (actionType === 'zeusDeath') { if (p) p.zeusDeaths++; }
+            else if (actionType === 'teamkill') { if (p) p.teamkills++; }
 
             window.state.history.push({
                 player,
@@ -739,8 +774,10 @@
 
         document.getElementById('saveSettingsBtn').addEventListener('click', () => {
             window.state.settings.knifeKill = parseInt(document.getElementById('cfgKnifeKill').value) || 3;
+            window.state.settings.knifeDeath = parseInt(document.getElementById('cfgKnifeDeath').value) || -3;
             window.state.settings.zeusKill = parseInt(document.getElementById('cfgZeusKill').value) || 2;
-            window.state.settings.teamkill = parseInt(document.getElementById('cfgTeamkill').value) || -2;
+            window.state.settings.zeusDeath = parseInt(document.getElementById('cfgZeusDeath').value) || -2;
+            window.state.settings.teamkill = parseInt(document.getElementById('cfgTeamkill').value) - 2 || -2;
 
             saveToStorage();
             renderAll();
