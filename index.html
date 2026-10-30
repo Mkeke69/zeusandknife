@@ -22,7 +22,7 @@
     <!-- Firebase SDK (Modular CDN) -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, set, onValue, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+        import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDtrH8jOpAeKrt9u7soQuQNEeBEYTge1QY",
@@ -64,23 +64,23 @@
         let chartInstance = null;
         let isRemoteUpdate = false;
 
-        // Lytt på sanntidsendringer fra Firebase
         onValue(stateRef, (snapshot) => {
             const data = snapshot.val();
-            if (data) {
+            if (data && data.players && data.players.length > 0) {
                 isRemoteUpdate = true;
                 window.state = data;
                 ensurePlayersExist();
                 renderAll();
                 isRemoteUpdate = false;
             } else {
-                // Initialiser databasen hvis den er tom
+                // Hvis databasen er tom, lagre standardstate med en gang
                 saveToFirebase();
             }
         });
 
         function saveToFirebase() {
             if (isRemoteUpdate) return;
+            ensurePlayersExist();
             set(stateRef, window.state).catch((error) => {
                 console.error("Feil ved lagring til Firebase:", error);
             });
