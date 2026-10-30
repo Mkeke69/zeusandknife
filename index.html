@@ -238,12 +238,13 @@
 
                 let actionText = "";
                 if (item.actionType === 'knifeKill') actionText = `<span class="text-red-400 font-bold">${item.player}</span> knivet motstander <span class="text-slate-400">(${item.victim || 'Motstander'})</span>`;
-                if (item.actionType === 'knifeDeath') actionText = `<span class="text-slate-300 font-bold">${item.player}</span> ble knivet av fienden!`;
-                if (item.actionType === 'zeusKill') actionText = `<span class="text-cyan-400 font-bold">${item.player}</span> tok <span class="text-slate-400">${item.victim || 'Motstander'}</span> med Zeus!`;
-                if (item.actionType === 'zeusDeath') actionText = `<span class="text-slate-300 font-bold">${item.player}</span> ble zeusset av fienden!`;
-                if (item.actionType === 'teamkill') actionText = `<span class="text-purple-400 font-bold">${item.player}</span> begikk teamkill på <span class="text-slate-400">(${item.victim || 'Lagkamerat'})</span>`;
+                else if (item.actionType === 'knifeDeath') actionText = `<span class="text-slate-300 font-bold">${item.player}</span> ble knivet av fienden!`;
+                else if (item.actionType === 'zeusKill') actionText = `<span class="text-cyan-400 font-bold">${item.player}</span> tok <span class="text-slate-400">${item.victim || 'Motstander'}</span> med Zeus!`;
+                else if (item.actionType === 'zeusDeath') actionText = `<span class="text-slate-300 font-bold">${item.player}</span> ble zeusset av fienden!`;
+                else if (item.actionType === 'teamkill') actionText = `<span class="text-purple-400 font-bold">${item.player}</span> begikk teamkill på <span class="text-slate-400">(${item.victim || 'Lagkamerat'})</span>`;
+                else if (item.actionType === 'undo') actionText = `<span class="text-amber-400 font-bold">⚠️ ANGRET:</span> Siste handling ble angret (${item.player})`;
 
-                div.innerHTML = `<div>${actionText}</div><div class="text-slate-500 font-mono text-[10px]">${item.timestamp || ''}</div>`;
+                div.innerHTML = `<div>${actionText}</div><div class="text-slate-400 font-mono text-[11px] font-semibold">${item.timestamp || ''}</div>`;
                 feed.appendChild(div);
             });
         }
@@ -295,7 +296,7 @@
                 player: playerName,
                 victim: 'Motstander',
                 actionType: type,
-                timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})
             });
 
             saveToFirebase();
@@ -317,6 +318,13 @@
                 if (lastEvent.actionType === 'zeusDeath' && p.zeusDeaths > 0) p.zeusDeaths--;
                 if (lastEvent.actionType === 'teamkill' && p.teamkills > 0) p.teamkills--;
             }
+
+            // Legg til en logg-hendelse for at det ble angret
+            window.state.history.push({
+                player: lastEvent.player || 'Ukjent',
+                actionType: 'undo',
+                timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})
+            });
 
             saveToFirebase();
         };
@@ -466,7 +474,7 @@
                     player,
                     victim,
                     actionType,
-                    timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+                    timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})
                 });
 
                 saveToFirebase();
