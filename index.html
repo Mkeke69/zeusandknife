@@ -27,6 +27,7 @@
         const firebaseConfig = {
             apiKey: "AIzaSyDtrH8jOpAeKrt9u7soQuQNEeBEYTge1QY",
             authDomain: "cs-kill-counter.firebaseapp.com",
+            databaseURL: "https://cs-kill-counter-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "cs-kill-counter",
             storageBucket: "cs-kill-counter.firebasestorage.app",
             messagingSenderId: "127624770642",
@@ -73,7 +74,6 @@
                 renderAll();
                 isRemoteUpdate = false;
             } else {
-                // Hvis databasen er tom, lagre standardstate med en gang
                 saveToFirebase();
             }
         });
