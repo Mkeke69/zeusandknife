@@ -232,9 +232,11 @@
                 return;
             }
 
-            [...history].reverse().forEach((item) => {
+            // Vi looper gjennom historikken. Vi viser nyeste øverst (eller beholder rekkefølgen). 
+            // For at slette-knappen skal treffe riktig index i arrayet, sender vi med indexen (i).
+            [...history].map((item, originalIndex) => ({ item, originalIndex })).reverse().forEach(({ item, originalIndex }) => {
                 const div = document.createElement('div');
-                div.className = "flex items-center justify-between p-2 rounded bg-slate-900/60 border border-slate-800 text-xs";
+                div.className = "flex items-center justify-between p-2 rounded bg-slate-900/60 border border-slate-800 text-xs gap-2";
 
                 let actionText = "";
                 if (item.actionType === 'knifeKill') actionText = `<span class="text-red-400 font-bold">${item.player}</span> knivet motstander <span class="text-slate-400">(${item.victim || 'Motstander'})</span>`;
@@ -244,7 +246,15 @@
                 else if (item.actionType === 'teamkill') actionText = `<span class="text-purple-400 font-bold">${item.player}</span> begikk teamkill på <span class="text-slate-400">(${item.victim || 'Lagkamerat'})</span>`;
                 else if (item.actionType === 'undo') actionText = `<span class="text-amber-400 font-bold">⚠️ ANGRET:</span> Siste handling ble angret (${item.player})`;
 
-                div.innerHTML = `<div>${actionText}</div><div class="text-slate-400 font-mono text-[11px] font-semibold">${item.timestamp || ''}</div>`;
+                div.innerHTML = `
+                    <div class="flex-grow">${actionText}</div>
+                    <div class="flex items-center space-x-2 flex-shrink-0">
+                        <span class="text-slate-400 font-mono text-[11px] font-semibold">${item.timestamp || ''}</span>
+                        <button onclick="window.removeLogItem(${originalIndex})" title="Slett denne hendelsen" class="p-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded border border-red-500/30 transition">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+                `;
                 feed.appendChild(div);
             });
         }
@@ -302,31 +312,34 @@
             saveToFirebase();
         };
 
+        // Funksjon for å slette en spesifikk linje fra loggen og trekke fra poenget
+        window.removeLogItem = function(index) {
+            if (!window.state.history || !window.state.history[index]) return;
+
+            const item = window.state.history[index];
+            const p = window.state.players.find(x => x.name === item.player);
+
+            if (p) {
+                if (item.actionType === 'knifeKill' && p.knifeKills > 0) p.knifeKills--;
+                if (item.actionType === 'knifeDeath' && p.knifeDeaths > 0) p.knifeDeaths--;
+                if (item.actionType === 'zeusKill' && p.zeusKills > 0) p.zeusKills--;
+                if (item.actionType === 'zeusDeath' && p.zeusDeaths > 0) p.zeusDeaths--;
+                if (item.actionType === 'teamkill' && p.teamkills > 0) p.teamkills--;
+            }
+
+            // Fjern elementet fra historikken
+            window.state.history.splice(index, 1);
+
+            saveToFirebase();
+        };
+
         window.undoLastEvent = function() {
             if (!window.state.history || window.state.history.length === 0) {
                 alert("Ingen hendelser å angre!");
                 return;
             }
-
-            const lastEvent = window.state.history.pop();
-            const p = window.state.players.find(x => x.name === lastEvent.player);
-
-            if (p) {
-                if (lastEvent.actionType === 'knifeKill' && p.knifeKills > 0) p.knifeKills--;
-                if (lastEvent.actionType === 'knifeDeath' && p.knifeDeaths > 0) p.knifeDeaths--;
-                if (lastEvent.actionType === 'zeusKill' && p.zeusKills > 0) p.zeusKills--;
-                if (lastEvent.actionType === 'zeusDeath' && p.zeusDeaths > 0) p.zeusDeaths--;
-                if (lastEvent.actionType === 'teamkill' && p.teamkills > 0) p.teamkills--;
-            }
-
-            // Legg til en logg-hendelse for at det ble angret
-            window.state.history.push({
-                player: lastEvent.player || 'Ukjent',
-                actionType: 'undo',
-                timestamp: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit', second:'2-digit'})
-            });
-
-            saveToFirebase();
+            // Bruker slettefunksjonen på den siste i listen
+            window.removeLogItem(window.state.history.length - 1);
         };
 
         window.openNewSeasonModal = () => {
